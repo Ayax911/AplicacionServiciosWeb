@@ -1,0 +1,116 @@
+@* BusquedaModal.razor - Componente reutilizable para buscar en CUALQUIER tabla *@
+
+@if (IsModalVisible)
+{
+    <div class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex justify-content-center align-items-center">
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content shadow-lg">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-search"></i> @Titulo
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <!-- Campo de búsqueda -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-search"></i> Buscar por:
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   placeholder="@Placeholder"
+                                   @bind="TextoBusquedaLocal"
+                                   @onkeyup="@(e => { if(e.Key == "Enter") AplicarBusqueda(); })" />
+                            <small class="text-muted">Presiona Enter para buscar</small>
+                        </div>
+                        
+                        <!-- Mensaje informativo -->
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-info-circle"></i> 
+                            @MensajeInfo
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" @onclick="AplicarBusqueda">
+                            <i class="bi bi-search"></i> Buscar
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" @onclick="LimpiarTexto">
+                            <i class="bi bi-x-circle"></i> Limpiar
+                        </button>
+                        <button type="button" class="btn btn-secondary" @onclick="CerrarModal">
+                            Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+   
+    // Controla si el modal está visible
+    [Parameter]
+    public bool IsModalVisible { get; set; }
+
+    
+    // Título del modal 
+    [Parameter]
+    public string Titulo { get; set; } = "Buscar";
+
+    
+    // Placeholder del input ("Título o descripción...", "Código, título...")
+    [Parameter]
+    public string Placeholder { get; set; } = "Escribe aquí...";
+
+    // Mensaje 
+    [Parameter]
+    public string MensajeInfo { get; set; } = "Se buscarán coincidencias en los campos disponibles";
+
+    // Texto de búsqueda 
+    [Parameter]
+    public string TextoBusqueda { get; set; } = "";
+
+    // Evento que se dispara cuando cambia el texto de búsqueda
+    [Parameter]
+    public EventCallback<string> TextoBusquedaChanged { get; set; }
+
+
+    // Método que se ejecuta al aplicar la búsqueda
+    [Parameter]
+    public EventCallback OnBuscar { get; set; }
+
+    // Método que se ejecuta al cerrar el modal
+    [Parameter]
+    public EventCallback OnCerrar { get; set; }
+
+    // Variable local para manejar el input
+    private string TextoBusquedaLocal { get; set; } = "";
+
+    protected override void OnParametersSet()
+    {
+        TextoBusquedaLocal = TextoBusqueda;
+    }
+
+    private async Task AplicarBusqueda()
+    {
+        await TextoBusquedaChanged.InvokeAsync(TextoBusquedaLocal);
+        
+        await OnBuscar.InvokeAsync();
+    }
+
+    private async Task LimpiarTexto()
+    {
+        TextoBusquedaLocal = "";
+        await TextoBusquedaChanged.InvokeAsync(TextoBusquedaLocal);
+    }
+
+    private async Task CerrarModal()
+    {
+        await OnCerrar.InvokeAsync();
+    }
+}

@@ -1,0 +1,79 @@
+@using BlazorApp1.Models  
+@* EstadoModal.razor - Modal para CREAR y EDITAR Estado *@
+
+@if (IsModalVisible)
+{ 
+    <div class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50
+                d-flex justify-content-center align-items-center">
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content shadow-lg">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">@Title</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <EditForm Model="@estado" OnValidSubmit="@Metodo">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="text-danger" />
+                            
+                            <div class="mb-3">
+                                <label for="nombre" class="form-label">Nombre</label>
+                                <InputText id="nombre" class="form-control" @bind-Value="estado.Nombre" />
+                                <ValidationMessage For="@(() => estado.Nombre)" class="text-danger" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <InputTextArea id="descripcion" class="form-control" rows="4" @bind-Value="estado.Descripcion" />
+                                <ValidationMessage For="@(() => estado.Descripcion)" class="text-danger" />
+                            </div>
+                            
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg"></i> Guardar
+                                </button>
+                                <button type="button" class="btn btn-secondary" @onclick="CloseModal">
+                                    <i class="bi bi-x-lg"></i> Cancelar
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Título del modal (ej: "Crear Estado", "Editar Estado")
+    /// </summary>
+    [Parameter] 
+    public string? Title { get; set; }
+    
+    /// <summary>
+    /// Objeto Estado a crear o editar
+    /// </summary>
+    [Parameter]
+    public Estado? estado { get; set; }
+
+    /// <summary>
+    /// Controla si el modal está visible
+    /// </summary>
+    [Parameter]
+    public bool IsModalVisible { get; set; }
+    
+    /// <summary>
+    /// Método asíncrono que se ejecuta al enviar el formulario (Crear o Actualizar)
+    /// </summary>
+    [Parameter]
+    public Func<Task>? Metodo { get; set; }
+
+    public void CloseModal()
+    {
+        IsModalVisible = false;
+        StateHasChanged();
+    }
+}

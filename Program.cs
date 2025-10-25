@@ -1,0 +1,21 @@
+using BlazorApp1;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using BlazorApp1.Servicios;
+
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
+string url = "http://localhost:5031";
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(url) });
+builder.Services.AddScoped<ServiciosAPI>();
+builder.Services.AddScoped<ServiciosUsuario>();
+builder.Services.AddScoped<ServiciosTResponsable>();
+builder.Services.AddScoped<ServiciosEstado>();
+builder.Services.AddScoped<ServiciosTProyecto>();
+builder.Services.AddScoped<ServiciosTProducto>();
+builder.Services.AddScoped<ServiciosVariableEstrategica>();
+builder.Services.AddScoped<ServiciosEntregable>();
+builder.Services.AddScoped<ServiciosReponsable>();
+builder.Services.AddScoped<ServiciosProyecto>();
+await builder.Build().RunAsync();

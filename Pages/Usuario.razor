@@ -1,0 +1,296 @@
+@page "/usuario"
+@using BlazorApp1.Models
+@using BlazorApp1.Contenedores
+<!-- injeccion del servicio  para el CRUD-->
+@inject BlazorApp1.Servicios.ServiciosUsuario UsuarioService
+
+<h5 class="mb-4 text-center">Lista de Usuarios</h5>
+
+<!-- Botones -->
+<div class="mb-4">
+    <button class="btn btn-success me-2" @onclick="AbrirModalCrear">
+        <i class="bi bi-plus-lg"></i> Crear
+    </button>
+    <button class="btn btn-primary" @onclick="AbrirModalBuscar">
+        <i class="bi bi-search"></i> Buscar
+    </button>
+    
+    @if (!string.IsNullOrEmpty(filtroActivo))
+    {
+        <span class="badge bg-info text-dark ms-2">
+            Filtrando: "@filtroActivo" 
+            <button class="btn-close btn-close-white btn-sm ms-1" @onclick="LimpiarFiltro"></button>
+        </span>
+    }
+</div>
+
+<!-- Tabla -->
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead class="table-primary">
+            <tr>
+                <th>ID</th>
+                <th>Email</th>
+                <th>Activo</th>
+                <th>Avatar</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!UsuariosFiltrados.Any())
+            {
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        @if (string.IsNullOrEmpty(filtroActivo))
+                        {
+                            <span>No hay usuarios registrados</span>
+                        }
+                        else
+                        {
+                            <span>No se encontraron resultados para "@filtroActivo"</span>
+                        }
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var u in UsuariosFiltrados) 
+                {
+                    <tr>
+                        <td>@u.Id</td>
+                        <td>@u.Email</td>
+                        <td>
+                            @if (u.Activo)
+                            {
+                                <span class="badge bg-success">Activo</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Inactivo</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(u.RutaAvatar))
+                            {
+                                <img src="@u.RutaAvatar" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;" />
+                            }
+                            else
+                            {
+                                <span class="text-muted">Sin avatar</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-primary btn-sm me-1" @onclick="() => AbrirModalEditar(u)">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class ="btn btn-danger btn-sm me-1"@onclick="()=> Eliminar(u)">
+                            <i class="bi bi-pencil"></i> Eliminar
+                            </button/>
+                            
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+<!-- Mensaje de operación -->
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @mensaje
+        <button type="button" class="btn-close" @onclick="() => vaciarMensaje()"></button>
+    </div>
+}
+
+
+<!-- Modal de Búsqueda -->
+<BusquedaModal 
+    IsModalVisible="@IsModalBuscarVisible"
+    Titulo="Buscar Usuarios"
+    Placeholder="Email..."
+    MensajeInfo="Se buscarán coincidencias en el email"
+    TextoBusqueda="@textoBusqueda"
+    TextoBusquedaChanged="@((value) => textoBusqueda = value)"
+    OnBuscar="@AplicarBusqueda"
+    OnCerrar="@CerrarModalBuscar" />
+
+<!-- Modal de Usuario -->
+<UsuarioModal 
+    Title="@titulo" 
+    usuario="@Tuusuario"
+    Metodo="@metodo"
+    IsModalVisible="@IsModalVisible" />
+
+@code {
+    private List<Models.Usuario> usuarios = new List<Models.Usuario>();
+    private Models.Usuario Tuusuario = new Models.Usuario();
+    private string titulo = "";
+
+    private string mensaje = "";
+    private Func<Task>? metodo;
+    private bool IsModalVisible = false;
+
+    // Variables para búsqueda
+    private bool IsModalBuscarVisible = false;
+    private string textoBusqueda = "";
+    private string filtroActivo = "";
+
+    private IEnumerable<Models.Usuario> UsuariosFiltrados
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(filtroActivo))
+                return usuarios;
+
+            var filtro = filtroActivo.ToLower();
+            return usuarios.Where(u =>
+                (u.Email?.ToLower().Contains(filtro) ?? false)
+                
+            );
+        }
+    }
+
+     protected override async Task OnInitializedAsync()
+  {
+      try
+      {
+          var Us = await UsuarioService.GetUsuarios();
+          if (Us != null)
+          {
+              usuarios = Us.ToList();
+          }
+      }
+      catch (Exception ex)
+      {
+          mensaje = "Error al conectar al servidor "+ ex.Message;
+      }
+
+  }
+
+    // Métodos de búsqueda
+    private void AbrirModalBuscar() => IsModalBuscarVisible = true;
+    
+    private void CerrarModalBuscar() => IsModalBuscarVisible = false;
+    
+    private void AplicarBusqueda()
+    {
+        filtroActivo = textoBusqueda;
+        IsModalBuscarVisible = false;
+    }
+    
+    private void LimpiarFiltro()
+    {
+        filtroActivo = "";
+        textoBusqueda = "";
+    }
+ 
+        private void vaciarMensaje()
+        {
+            mensaje = "";
+        }
+    // Métodos CRUD
+    private async Task AbrirModalCrear() => await OpenModal("Crear Usuario", null);
+    
+    private async Task AbrirModalEditar(Models.Usuario usuario) => await OpenModal("Editar Usuario", usuario);
+
+    private async Task OpenModal(string accion, Models.Usuario? usuario)
+    {
+        if (accion == "Crear Usuario")
+        {
+            titulo = "Crear Usuario";
+            Tuusuario = new Models.Usuario
+            {
+                Activo = false,
+                RutaAvatar = ""
+            };
+            metodo = () => Crear();
+        }
+        else if (accion == "Editar Usuario" && usuario != null)
+        {
+            titulo = "Editar Usuario";
+            Tuusuario = new Models.Usuario
+            {
+                Id = usuario.Id,
+                Email = usuario.Email,
+                Contrasena = usuario.Contrasena,
+                Activo = usuario.Activo,
+                RutaAvatar = usuario.RutaAvatar
+            };
+            metodo = () => actualizar(usuario);
+        }
+
+        IsModalVisible = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+  private async Task Crear()
+ {
+     CUUsuario newusuario = new CUUsuario
+ {
+	Email = Tuusuario.Email,
+	Contrasena = Tuusuario.Contrasena,
+	Activo = Tuusuario.Activo,
+	RutaAvatar = Tuusuario.RutaAvatar
+};
+     var respuesta = await UsuarioService.PostUsuario(newusuario);
+     if (respuesta != null)
+     {
+         mensaje = respuesta.Mensaje;
+         if (respuesta.Estado == 200)
+         {
+             usuarios = (await UsuarioService.GetUsuarios()).ToList();
+             await InvokeAsync(StateHasChanged);
+             IsModalVisible = false;
+             await Task.CompletedTask;
+         }
+     }
+     IsModalVisible = false;
+     await Task.CompletedTask;
+   
+ }
+
+     private async Task actualizar(Models.Usuario usuarioUP)
+    {
+        CUUsuario usuarioNEW = new CUUsuario
+			{
+				Email = usuarioUP.Email,
+				Contrasena = usuarioUP.Contrasena,
+				Activo = usuarioUP.Activo,
+				RutaAvatar = usuarioUP.RutaAvatar
+			};
+        ;
+        if (usuarioUP.Id.HasValue)
+        {
+            int id = usuarioUP.Id.Value; 
+            var respuesta =  await UsuarioService.PutUsuario(usuarioNEW, "Id", id);
+			if (respuesta != null)
+			{
+				mensaje = respuesta.Mensaje;
+				if (respuesta.Estado == 200)
+				{
+					usuarios = (await UsuarioService.GetUsuarios()).ToList();
+                    await InvokeAsync(StateHasChanged);
+                    IsModalVisible = false;
+                    await Task.CompletedTask;
+				}
+			}
+        }
+    }
+    private async Task Eliminar(Models.Usuario Eusuario)
+{
+	int id = Eusuario.Id!.HasValue ? Eusuario.Id.Value : 0;
+	var respuesta = await UsuarioService.DeleteUsuario("Id", id);
+	if (respuesta != null)
+	{
+		mensaje = respuesta.Mensaje;
+		if (respuesta.Estado == 200)
+		{
+			usuarios = (await UsuarioService.GetUsuarios()).ToList();
+            await InvokeAsync(StateHasChanged);
+		}
+	}
+}
+
+    
+}

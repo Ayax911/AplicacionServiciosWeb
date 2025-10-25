@@ -1,0 +1,81 @@
+﻿ @using Models  
+<!-- Modal -->
+@if (IsModalVisible)
+{ 
+    <div class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50
+                d-flex justify-content-center align-items-center">
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content shadow-lg">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">@Title</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <EditForm Model="@usuario" OnValidSubmit="@Metodo">
+                            <!--AQUI se activa el validador de los dataanotations-->
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <!-- las etiquetas en azul son etiquetas html y las verdes son de boostrap-->
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <InputText id="email" type="email" class="form-control" @bind-Value="usuario.Email" />
+                            </div>
+                            <!--dependiendo del tipo de texto se usa una etiqueta diferente
+                                y se especifica su tipo de ser necesario (mirar type) -->
+                            <div class="mb-3">
+                                <label for="Contraseña" class="form-label">Contraseña</label>
+                                <InputText id="Contraseña" type="password" class="form-control" @bind-Value="usuario.Contrasena" />
+                            </div>
+                            <div class="form-check mb-3">
+                                <InputCheckbox id="Activo" class="form-check-input" @bind-Value="usuario.Activo" />
+                                <label for="Activo" class="form-check-label">Activo</label>
+                            </div>
+                            <div class="mb-3">
+                                <label for="Avatar" class="form-label">Avatar</label>
+                                <InputText id="Avatar" type="text" class="form-control" @bind-Value="usuario.RutaAvatar" />
+							</div>
+
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">Confirmar</button>
+                                <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cerrar</button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+}
+
+@code {
+    [Parameter] 
+    public string? Title
+    {
+        get; set;
+    }
+    [Parameter]
+    public Usuario? usuario
+    {
+        get; set;
+    }
+    [Parameter]
+    public bool IsModalVisible
+    {
+        get; set;
+    }
+	//parametro que recibe un metodo asincrono
+    [Parameter]
+    public Func<Task>? Metodo
+    {
+        get; set;
+    }
+
+	public void CloseModal()
+	{
+		IsModalVisible = false;
+		StateHasChanged();
+	}
+}

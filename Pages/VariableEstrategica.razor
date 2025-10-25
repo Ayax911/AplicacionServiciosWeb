@@ -1,0 +1,200 @@
+@page "/variableestrategica"
+@using BlazorApp1.Models
+@using BlazorApp1.Contenedores
+@inject BlazorApp1.Servicios.ServiciosVariableEstrategica VariableEstrategicaService
+
+<h5 class="mb-4 text-center">Lista de Variables Estratégicas</h5>
+
+<div class="mb-4">
+    <button class="btn btn-success me-2" @onclick="AbrirModalCrear">
+        <i class="bi bi-plus-lg"></i> Crear
+    </button>
+    <button class="btn btn-primary" @onclick="AbrirModalBuscar">
+        <i class="bi bi-search"></i> Buscar
+    </button>
+    
+    @if (!string.IsNullOrEmpty(filtroActivo))
+    {
+        <span class="badge bg-info text-dark ms-2">
+            Filtrando: "@filtroActivo" 
+            <button class="btn-close btn-close-white btn-sm ms-1" @onclick="LimpiarFiltro"></button>
+        </span>
+    }
+</div>
+
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead class="table-primary">
+            <tr>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Descripción</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!VariablesEstrategicasFiltradas.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        @if (string.IsNullOrEmpty(filtroActivo))
+                        {
+                            <span>No hay variables estratégicas registradas</span>
+                        }
+                        else
+                        {
+                            <span>No se encontraron resultados para "@filtroActivo"</span>
+                        }
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var ve in VariablesEstrategicasFiltradas) 
+                {
+                    <tr>
+                        <td>@ve.Id</td>
+                        <td>@ve.Titulo</td>
+                        <td>@ve.Descripcion</td>
+                        <td class="text-center">
+                            <button class="btn btn-primary btn-sm me-1" @onclick="() => AbrirModalEditar(ve)">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => Eliminar(ve)">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @mensaje
+        <button type="button" class="btn-close" @onclick="() => vaciarMensaje()"></button>
+    </div>
+}
+
+<BusquedaModal 
+    IsModalVisible="@IsModalBuscarVisible"
+    Titulo="Buscar Variables Estratégicas"
+    Placeholder="Título o descripción..."
+    MensajeInfo="Se buscarán coincidencias en título y descripción"
+    TextoBusqueda="@textoBusqueda"
+    TextoBusquedaChanged="@((value) => textoBusqueda = value)"
+    OnBuscar="@AplicarBusqueda"
+    OnCerrar="@CerrarModalBuscar" />
+
+<VariableEstrategicaModal 
+    Title="@titulo" 
+    variableEstrategica="@TuVariableEstrategica"
+    Metodo="@metodo"
+    IsModalVisible="@IsModalVisible" />
+
+@code {
+    private List<Models.VariableEstrategica> variablesEstrategicas = new();
+    private Models.VariableEstrategica TuVariableEstrategica = new();
+    private string titulo = "";
+    private Func<Task>? metodo;
+    private bool IsModalVisible = false;
+
+    private bool IsModalBuscarVisible = false;
+    private string textoBusqueda = "";
+    private string mensaje = "";   
+    private string filtroActivo = "";
+
+    private IEnumerable<Models.VariableEstrategica> VariablesEstrategicasFiltradas =>
+        string.IsNullOrWhiteSpace(filtroActivo)
+            ? variablesEstrategicas
+            : variablesEstrategicas.Where(ve =>
+                (ve.Titulo?.Contains(filtroActivo, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (ve.Descripcion?.Contains(filtroActivo, StringComparison.OrdinalIgnoreCase) ?? false)
+              );
+
+    protected override async Task OnInitializedAsync()
+    {
+        var resp = await VariableEstrategicaService.GetVariablesEstrategicas();
+        if (resp != null) variablesEstrategicas = resp.ToList();
+    }
+
+    private void AbrirModalBuscar() => IsModalBuscarVisible = true;
+    private void CerrarModalBuscar() => IsModalBuscarVisible = false;
+    private void AplicarBusqueda() { filtroActivo = textoBusqueda; IsModalBuscarVisible = false; }
+    private void vaciarMensaje() => mensaje = "";
+    private void LimpiarFiltro() { filtroActivo = ""; textoBusqueda = ""; }
+
+    private async Task AbrirModalCrear() => await OpenModal("Crear Variable Estratégica", null);
+    private async Task AbrirModalEditar(Models.VariableEstrategica variable) => await OpenModal("Editar Variable Estratégica", variable);
+
+    private async Task OpenModal(string accion, Models.VariableEstrategica? variable)
+    {
+        if (accion == "Crear Variable Estratégica")
+        {
+            titulo = accion;
+            TuVariableEstrategica = new();
+            metodo = Crear;
+        }
+        else if (accion == "Editar Variable Estratégica" && variable != null)
+        {
+            titulo = accion;
+            TuVariableEstrategica = new Models.VariableEstrategica
+            {
+                Id = variable.Id,
+                Titulo = variable.Titulo,
+                Descripcion = variable.Descripcion
+            };
+            metodo = () => Actualizar(TuVariableEstrategica);
+        }
+
+        IsModalVisible = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Crear()
+    {
+        var nueva = new CUVariableEstrategica
+        {
+            Titulo = TuVariableEstrategica.Titulo,
+            Descripcion = TuVariableEstrategica.Descripcion
+        };
+
+        var resp = await VariableEstrategicaService.PostVariableEstrategica(nueva);
+        if (resp != null)
+        {
+            mensaje = resp.Mensaje;
+            if (resp.Estado == 200) variablesEstrategicas = (await VariableEstrategicaService.GetVariablesEstrategicas()).ToList();
+        }
+        IsModalVisible = false;
+    }
+
+    private async Task Actualizar(Models.VariableEstrategica variable)
+    {
+        var actualizar = new CUVariableEstrategica
+        {
+            Titulo = variable.Titulo,
+            Descripcion = variable.Descripcion
+        };
+
+        var resp = await VariableEstrategicaService.PutVariableEstrategica(actualizar, "Id", variable.Id);
+        if (resp != null)
+        {
+            mensaje = resp.Mensaje;
+            if (resp.Estado == 200) variablesEstrategicas = (await VariableEstrategicaService.GetVariablesEstrategicas()).ToList();
+        }
+        IsModalVisible = false;
+    }
+
+    private async Task Eliminar(Models.VariableEstrategica variable)
+    {
+        var resp = await VariableEstrategicaService.DeleteVariableEstrategica("Id", variable.Id);
+        if (resp != null)
+        {
+            mensaje = resp.Mensaje;
+            if (resp.Estado == 200) variablesEstrategicas = (await VariableEstrategicaService.GetVariablesEstrategicas()).ToList();
+        }
+    }
+}

@@ -1,0 +1,109 @@
+@using BlazorApp1.Models  
+@* EntregableModal.razor - Modal para CREAR y EDITAR Entregables *@
+
+@if (IsModalVisible)
+{ 
+    <div class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50
+                d-flex justify-content-center align-items-center">
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content shadow-lg">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">@Title</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <EditForm Model="@entregable" OnValidSubmit="@Metodo">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="text-danger" />
+
+                            <div class="mb-3">
+                                <label for="codigo" class="form-label">Código</label>
+                                <InputText id="codigo" class="form-control" @bind-Value="entregable.Codigo" />
+                                <ValidationMessage For="@(() => entregable.Codigo)" class="text-danger" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="titulo" class="form-label">Título</label>
+                                <InputText id="titulo" class="form-control" @bind-Value="entregable.Titulo" />
+                                <ValidationMessage For="@(() => entregable.Titulo)" class="text-danger" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <InputTextArea id="descripcion" class="form-control" rows="3" @bind-Value="entregable.Descripcion" />
+                                <ValidationMessage For="@(() => entregable.Descripcion)" class="text-danger" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
+                                <InputDate id="fechaInicio" class="form-control" @bind-Value="entregable.FechaInicio" />
+                                <ValidationMessage For="@(() => entregable.FechaInicio)" class="text-danger" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="fechaFinPrevista" class="form-label">Fecha Fin Prevista</label>
+                                <InputDate id="fechaFinPrevista" class="form-control" @bind-Value="entregable.FechaFinPrevista" />
+                                <ValidationMessage For="@(() => entregable.FechaFinPrevista)" class="text-danger" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="fechaFinModificacion" class="form-label">Fecha Modificación</label>
+                                <InputDate id="fechaFinModificacion" class="form-control" @bind-Value="entregable.FechaModificacion" />
+                                <ValidationMessage For="@(() => entregable.FechaModificacion)" class="text-danger" />
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="fechaFinalizacion" class="form-label">Fecha Finalización</label>
+                                <InputDate id="fechaFinalizacion" class="form-control" @bind-Value="entregable.FechaFinalizacion" />
+                                <ValidationMessage For="@(() => entregable.FechaFinalizacion)" class="text-danger" />
+                            </div>
+                            
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg"></i> Guardar
+                                </button>
+                                <button type="button" class="btn btn-secondary" @onclick="CloseModal">
+                                    <i class="bi bi-x-lg"></i> Cancelar
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// Título del modal (ej: "Crear Entregable", "Editar Entregable")
+    /// </summary>
+    [Parameter] 
+    public string? Title { get; set; }
+
+    /// <summary>
+    /// Objeto Entregable a crear o editar
+    /// </summary>
+    [Parameter]
+    public Entregable? entregable { get; set; }
+
+    /// <summary>
+    /// Controla si el modal está visible
+    /// </summary>
+    [Parameter]
+    public bool IsModalVisible { get; set; }
+
+    /// <summary>
+    /// Método asíncrono que se ejecuta al enviar el formulario (Crear o Actualizar)
+    /// </summary>
+    [Parameter]
+    public Func<Task>? Metodo { get; set; }
+
+    public void CloseModal()
+    {
+        IsModalVisible = false;
+        StateHasChanged();
+    }
+}

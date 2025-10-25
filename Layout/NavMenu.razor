@@ -1,0 +1,75 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">BlazorApp1</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="nav flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+              
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="Usuario">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Usuario
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="TipoResponsable">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> TipoResponsable
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="TipoProyecto">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> TipoProyecto
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="Estado">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Estado
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="TipoProducto">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> TipoProducto
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="VariableEstrategica">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> VariableEstrategica
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="Entregable">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Entregable
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="responsables">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Reposanble
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="proyectos">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> Proyectos
+            </NavLink>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

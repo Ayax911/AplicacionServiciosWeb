@@ -1,0 +1,250 @@
+@page "/tiporesponsable"
+@using BlazorApp1.Models
+@using BlazorApp1.Contenedores
+<!-- injeccion del servicio  para el CRUD-->
+@inject BlazorApp1.Servicios.ServiciosTResponsable TipoResponsableService
+
+<h5 class="mb-4 text-center">Lista de Tipos de Responsable</h5>
+
+<!-- Botones -->
+<div class="mb-4">
+    <button class="btn btn-success me-2" @onclick="AbrirModalCrear">
+        <i class="bi bi-plus-lg"></i> Crear
+    </button>
+    <button class="btn btn-primary" @onclick="AbrirModalBuscar">
+        <i class="bi bi-search"></i> Buscar
+    </button>
+    
+    @if (!string.IsNullOrEmpty(filtroActivo))
+    {
+        <span class="badge bg-info text-dark ms-2">
+            Filtrando: "@filtroActivo" 
+            <button class="btn-close btn-close-white btn-sm ms-1" @onclick="LimpiarFiltro"></button>
+        </span>
+    }
+</div>
+
+<!-- Tabla -->
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead class="table-primary">
+            <tr>
+                <th>ID</th>
+                <th>Título</th>
+                <th>Descripción</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!TiposResponsableFiltrados.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        @if (string.IsNullOrEmpty(filtroActivo))
+                        {
+                            <span>No hay tipos de responsable registrados</span>
+                        }
+                        else
+                        {
+                            <span>No se encontraron resultados para "@filtroActivo"</span>
+                        }
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var tr in TiposResponsableFiltrados) 
+                {
+                    <tr>
+                        <td>@tr.Id</td>
+                        <td>@tr.Titulo</td>
+                        <td>@tr.Descripcion</td>
+                        <td class="text-center">
+                            <button class="btn btn-primary btn-sm me-1" @onclick="() => AbrirModalEditar(tr)">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => Eliminar(tr)">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+<!-- Mensaje de operación -->
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @mensaje
+        <button type="button" class="btn-close" @onclick="() => vaciarMensaje()"></button>
+    </div>
+}
+
+
+<!-- Modal de Búsqueda -->
+<BusquedaModal 
+    IsModalVisible="@IsModalBuscarVisible"
+    Titulo="Buscar Tipos de Responsable"
+    Placeholder="Título o descripción..."
+    MensajeInfo="Se buscarán coincidencias en título y descripción"
+    TextoBusqueda="@textoBusqueda"
+    TextoBusquedaChanged="@((value) => textoBusqueda = value)"
+    OnBuscar="@AplicarBusqueda"
+    OnCerrar="@CerrarModalBuscar" />
+
+<!-- Modal de TipoResponsable -->
+<TipoResponsableModal 
+    Title="@titulo" 
+    tipoResponsable="@TutipoResponsable"
+    Metodo="@metodo"
+    IsModalVisible="@IsModalVisible" />
+
+@code {
+    private List<Models.TipoResponsable> tiposResponsable = new List<Models.TipoResponsable>();
+    private Models.TipoResponsable TutipoResponsable = new Models.TipoResponsable();
+    private string titulo = "";
+    private Func<Task>? metodo;
+    private bool IsModalVisible = false;
+
+    // Variables para búsqueda
+    private bool IsModalBuscarVisible = false;
+    private string textoBusqueda = "";
+
+    private string mensaje = "";   
+    private string filtroActivo = "";
+
+    private IEnumerable<Models.TipoResponsable> TiposResponsableFiltrados
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(filtroActivo))
+                return tiposResponsable;
+
+            var filtro = filtroActivo.ToLower();
+            return tiposResponsable.Where(tr =>
+                (tr.Titulo?.ToLower().Contains(filtro) ?? false) ||
+                (tr.Descripcion?.ToLower().Contains(filtro) ?? false)
+            );
+        }
+    }
+
+
+    protected override async Task OnInitializedAsync()
+   {
+     // Cargar los tipos de responsable al iniciar el componente
+       var resp = await TipoResponsableService.GetResponsables();
+       if (resp != null)
+       {
+		tiposResponsable = resp.ToList();
+       }
+   }
+
+    // Métodos de búsqueda
+    private void AbrirModalBuscar() => IsModalBuscarVisible = true;
+    
+    private void CerrarModalBuscar() => IsModalBuscarVisible = false;
+    
+    private void AplicarBusqueda()
+    {
+        filtroActivo = textoBusqueda;
+        IsModalBuscarVisible = false;
+    }
+    private void vaciarMensaje()
+    {
+        mensaje = "";
+    }
+    
+    private void LimpiarFiltro()
+    {
+        filtroActivo = "";
+        textoBusqueda = "";
+    }
+
+    // Métodos CRUD
+    private async Task AbrirModalCrear() => await OpenModal("Crear Tipo de Responsable", null);
+    
+    private async Task AbrirModalEditar(Models.TipoResponsable tipo) => await OpenModal("Editar Tipo de Responsable", tipo);
+
+    private async Task OpenModal(string accion, Models.TipoResponsable? tipo)
+    {
+        if (accion == "Crear Tipo de Responsable")
+        {
+            titulo = "Crear Tipo de Responsable";
+            TutipoResponsable = new Models.TipoResponsable();
+            metodo = () => Crear();
+        }
+        else if (accion == "Editar Tipo de Responsable" && tipo != null)
+        {
+            titulo = "Editar Tipo de Responsable";
+            TutipoResponsable = new Models.TipoResponsable
+            {
+                Id = tipo.Id,
+                Titulo = tipo.Titulo,
+                Descripcion = tipo.Descripcion
+            };
+            metodo = () => actualizar(TutipoResponsable);
+        }
+
+        IsModalVisible = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Crear()
+ {
+		CUTipoResponsable newResp = new CUTipoResponsable
+         {
+	Titulo = TutipoResponsable.Titulo,
+	Descripcion = TutipoResponsable.Descripcion
+         };
+     var respuesta = await TipoResponsableService.PostResponsable(newResp);
+     if (respuesta != null)
+     {
+         mensaje = respuesta.Mensaje;
+         if (respuesta.Estado == 200)
+         {
+             tiposResponsable = (await TipoResponsableService.GetResponsables()).ToList();
+         }
+     }
+     IsModalVisible = false;
+     await Task.CompletedTask;
+ }
+ private async Task actualizar(Models.TipoResponsable ResponsableUP)
+ {
+     CUTipoResponsable ResponsableNEW = new  CUTipoResponsable
+         {
+	Titulo = ResponsableUP.Titulo,
+	Descripcion = ResponsableUP.Descripcion
+         };
+     ;
+
+         int id = ResponsableUP.Id;
+         var respuesta = await TipoResponsableService.PutResponsable(ResponsableNEW, "Id", id);
+         if (respuesta != null)
+         {
+             mensaje = respuesta.Mensaje;
+             if (respuesta.Estado == 200)
+             {
+                // Refrescar la lista después de la actualización
+                 tiposResponsable = (await  TipoResponsableService.GetResponsables()).ToList();
+	    IsModalVisible = false;
+             }
+         }
+     
+ }
+ private async Task Eliminar(Models.TipoResponsable resp)
+ {
+     int id = resp.Id;
+     var respuesta = await TipoResponsableService.DeleteResponsable("Id", id);
+     if (respuesta != null)
+     {
+         mensaje = respuesta.Mensaje;
+         if (respuesta.Estado == 200)
+         {
+            // Refrescar la lista después de la eliminación
+             tiposResponsable = (await TipoResponsableService.GetResponsables()).ToList();
+         }
+     }
+ }
+}

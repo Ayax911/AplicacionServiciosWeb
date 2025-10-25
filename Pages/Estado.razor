@@ -1,0 +1,274 @@
+@page "/estado"
+@using BlazorApp1.Models
+@using BlazorApp1.Contenedores
+<!-- injeccion del servicio  para el CRUD-->
+@inject BlazorApp1.Servicios.ServiciosEstado EstadoService
+
+<h5 class="mb-4 text-center">Lista de Estados</h5>
+
+<!-- Botones -->
+<div class="mb-4">
+    <button class="btn btn-success me-2" @onclick="AbrirModalCrear">
+        <i class="bi bi-plus-lg"></i> Crear
+    </button>
+    <button class="btn btn-primary" @onclick="AbrirModalBuscar">
+        <i class="bi bi-search"></i> Buscar
+    </button>
+    
+
+    @if (!string.IsNullOrEmpty(filtroActivo))
+    {
+        <span class="badge bg-info text-dark ms-2">
+            Filtrando: "@filtroActivo" 
+            <button class="btn-close btn-close-white btn-sm ms-1" @onclick="LimpiarFiltro"></button>
+        </span>
+    }
+</div>
+
+<!-- Tabla -->
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead class="table-primary">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!EstadosFiltrados.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center text-muted py-4">
+                        @if (string.IsNullOrEmpty(filtroActivo))
+                        {
+                            <span>No hay estados registrados</span>
+                        }
+                        else
+                        {
+                            <span>No se encontraron resultados para "@filtroActivo"</span>
+                        }
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var e in EstadosFiltrados) 
+                {
+                    <tr>
+                        <td>@e.Id</td>
+                        <td>
+                            @if (e.Nombre == "Activo")
+                            {
+                                <span class="badge bg-success">@e.Nombre</span>
+                            }
+                            else if (e.Nombre == "En Progreso")
+                            {
+                                <span class="badge bg-primary">@e.Nombre</span>
+                            }
+                            else if (e.Nombre == "Completado")
+                            {
+                                <span class="badge bg-info">@e.Nombre</span>
+                            }
+                            else if (e.Nombre == "Suspendido")
+                            {
+                                <span class="badge bg-warning">@e.Nombre</span>
+                            }
+                            else if (e.Nombre == "Cancelado")
+                            {
+                                <span class="badge bg-danger">@e.Nombre</span>
+                            }
+                            else
+                            {
+                                <span>@e.Nombre</span>
+                            }
+                        </td>
+                        <td>@e.Descripcion</td>
+                        <td class="text-center">
+                            <button class="btn btn-primary btn-sm me-1" @onclick="() => AbrirModalEditar(e)">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => Eliminar(e)">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @mensaje
+        <button type="button" class="btn-close" @onclick="() => vaciarMensaje()"></button>
+    </div>
+}
+
+<!-- Modal de Búsqueda -->
+<BusquedaModal 
+    IsModalVisible="@IsModalBuscarVisible"
+    Titulo="Buscar Estados"
+    Placeholder="Nombre o descripción..."
+    MensajeInfo="Se buscarán coincidencias en nombre y descripción"
+    TextoBusqueda="@textoBusqueda"
+    TextoBusquedaChanged="@((value) => textoBusqueda = value)"
+    OnBuscar="@AplicarBusqueda"
+    OnCerrar="@CerrarModalBuscar" />
+
+<!-- Modal de Estado -->
+<EstadoModal 
+    Title="@titulo" 
+    estado="@Tuestado"
+    Metodo="@metodo"
+    IsModalVisible="@IsModalVisible" />
+
+@code {
+    private List<Models.Estado> estados = new List<Models.Estado>();
+    private Models.Estado Tuestado = new Models.Estado();
+    private string titulo = "";
+    private Func<Task>? metodo;
+    private bool IsModalVisible = false;
+    private string mensaje = "";
+
+    // Variables para búsqueda
+    private bool IsModalBuscarVisible = false;
+    private string textoBusqueda = "";
+    private string filtroActivo = "";
+
+    private IEnumerable<Models.Estado> EstadosFiltrados
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(filtroActivo))
+                return estados;
+
+            var filtro = filtroActivo.ToLower();
+            return estados.Where(e =>
+                (e.Nombre?.ToLower().Contains(filtro) ?? false) ||
+                (e.Descripcion?.ToLower().Contains(filtro) ?? false)
+            );
+        }
+    }
+
+     protected override async Task OnInitializedAsync()
+{
+    // Cargar los Estados al iniciar el componente
+    var resp = await EstadoService.GetEstados();
+    if (resp != null)
+    {
+        estados = resp.ToList();
+    }
+}
+
+
+    // Métodos de búsqueda
+    private void AbrirModalBuscar() => IsModalBuscarVisible = true;
+    
+    private void CerrarModalBuscar() => IsModalBuscarVisible = false;
+    
+    private void AplicarBusqueda()
+    {
+        filtroActivo = textoBusqueda;
+        IsModalBuscarVisible = false;
+    }
+    
+    private void LimpiarFiltro()
+    {
+        filtroActivo = "";
+        textoBusqueda = "";
+    }
+    private void vaciarMensaje()
+        {
+            mensaje = "";
+        }
+
+    // Métodos CRUD
+    private async Task AbrirModalCrear() => await OpenModal("Crear Estado", null);
+    
+    private async Task AbrirModalEditar(Models.Estado estado) => await OpenModal("Editar Estado", estado);
+
+    private async Task OpenModal(string accion, Models.Estado? estado)
+    {
+        if (accion == "Crear Estado")
+        {
+            titulo = "Crear Estado";
+            Tuestado = new Models.Estado();
+            metodo = () => Crear();
+        }
+        else if (accion == "Editar Estado" && estado != null)
+        {
+            titulo = "Editar Estado";
+            Tuestado = new Models.Estado
+            {
+                Id = estado.Id,
+                Nombre = estado.Nombre,
+                Descripcion = estado.Descripcion
+            };
+            metodo = () => actualizar(Tuestado);
+        }
+
+        IsModalVisible = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task Crear()
+ {
+		CUEstado newResp = new CUEstado
+         {
+	Nombre = Tuestado.Nombre,
+	Descripcion = Tuestado.Descripcion
+         };
+     var respuesta = await EstadoService.PostEstado(newResp);
+     if (respuesta != null)
+     {
+         mensaje = respuesta.Mensaje;
+         if (respuesta.Estado == 200)
+         {
+             estados = (await EstadoService.GetEstados()).ToList();
+         }
+     }
+     IsModalVisible = false;
+     await Task.CompletedTask;
+ }
+ private async Task actualizar(Models.Estado EstadoUP)
+ {
+     CUEstado EstadoNEW = new  CUEstado
+         {
+	Nombre = EstadoUP.Nombre,
+	Descripcion = EstadoUP.Descripcion
+         };
+     ;
+
+         int id = EstadoUP.Id;
+         var respuesta = await EstadoService.PutEstado(EstadoNEW, "Id", id);
+         if (respuesta != null)
+         {
+             mensaje = respuesta.Mensaje;
+             if (respuesta.Estado == 200)
+             {
+                // Refrescar la lista después de la actualización
+                 estados = (await  EstadoService.GetEstados()).ToList();
+	    IsModalVisible = false;
+             }
+         }
+     
+ }
+ private async Task Eliminar(Models.Estado resp)
+ {
+     int id = resp.Id;
+     var respuesta = await EstadoService.DeleteEstado("Id", id);
+     if (respuesta != null)
+     {
+         mensaje = respuesta.Mensaje;
+         if (respuesta.Estado == 200)
+         {
+            // Refrescar la lista después de la eliminación
+             estados = (await EstadoService.GetEstados()).ToList();
+         }
+     }
+}
+}

@@ -1,0 +1,263 @@
+@page "/entregable"
+@using BlazorApp1.Contenedores
+@using BlazorApp1.Models
+@inject BlazorApp1.Servicios.ServiciosEntregable EntregableService
+
+<h5 class="mb-4 text-center">Lista de Entregables</h5>
+
+<!-- Botones -->
+<div class="mb-4">
+    <button class="btn btn-success me-2" @onclick="AbrirModalCrear">
+        <i class="bi bi-plus-lg"></i> Crear
+    </button>
+    <button class="btn btn-primary" @onclick="AbrirModalBuscar">
+        <i class="bi bi-search"></i> Buscar
+    </button>
+    
+    @if (!string.IsNullOrEmpty(filtroActivo))
+    {
+        <span class="badge bg-info text-dark ms-2">
+            Filtrando: "@filtroActivo" 
+            <button class="btn-close btn-close-white btn-sm ms-1" @onclick="LimpiarFiltro"></button>
+        </span>
+    }
+</div>
+
+<!-- Tabla -->
+<div class="table-responsive">
+    <table class="table table-striped table-hover table-bordered">
+        <thead class="table-primary">
+            <tr>
+                <th>ID</th>
+                <th>Código</th>
+                <th>Título</th>
+                <th>Descripción</th>
+                <th>Fecha Inicio</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!EntregablesFiltrados.Any())
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                        @if (string.IsNullOrEmpty(filtroActivo))
+                        {
+                            <span>No hay entregables registrados</span>
+                        }
+                        else
+                        {
+                            <span>No se encontraron resultados para "@filtroActivo"</span>
+                        }
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var e in EntregablesFiltrados) 
+                {
+                    <tr>
+                        <td>@e.Id</td>
+                        <td>@e.Codigo</td>
+                        <td>@e.Titulo</td>
+                        <td>@e.Descripcion</td>
+                        <td>@e.FechaInicio.ToShortDateString()</td>
+                        <td class="text-center">
+                            <button class="btn btn-primary btn-sm me-1" @onclick="() => AbrirModalEditar(e)">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-danger btn-sm" @onclick="() => Eliminar(e)">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!string.IsNullOrEmpty(mensaje))
+{
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @mensaje
+        <button type="button" class="btn-close" @onclick="() => vaciarMensaje()"></button>
+    </div>
+}
+
+<!-- Busqueda Modal -->
+<BusquedaModal 
+    IsModalVisible="@IsModalBuscarVisible"
+    Titulo="Buscar Entregables"
+    Placeholder="Código, título o descripción..."
+    MensajeInfo="Se buscarán coincidencias en código, título y descripción"
+    TextoBusqueda="@textoBusqueda"
+    TextoBusquedaChanged="@((value) => textoBusqueda = value)"
+    OnBuscar="@AplicarBusqueda"
+    OnCerrar="@CerrarModalBuscar" />
+
+<!-- Componente Modal -->
+<EntregableModal 
+    Title="@titulo" 
+    entregable="@Tuentregable"
+    Metodo="@metodo"
+    IsModalVisible="@IsModalVisible" />
+
+@code {
+    private List<Entregable> entregables = new();
+    private Entregable Tuentregable = new();
+    private string titulo = "";
+    private Func<Task>? metodo;
+    private bool IsModalVisible = false;
+    private string mensaje = "";
+
+    // Variables para búsqueda
+    private bool IsModalBuscarVisible = false;
+    private string textoBusqueda = "";
+    private string filtroActivo = "";
+
+    // Filtrado 
+    private IEnumerable<Entregable> EntregablesFiltrados
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(filtroActivo))
+                return entregables;
+
+            var filtro = filtroActivo.ToLower();
+            return entregables.Where(e =>
+                (e.Codigo?.ToLower().Contains(filtro) ?? false) ||
+                (e.Titulo?.ToLower().Contains(filtro) ?? false) ||
+                (e.Descripcion?.ToLower().Contains(filtro) ?? false)
+            );
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var respuesta= (await EntregableService.GetEntregables()).ToList();
+        if (respuesta != null) {
+            entregables = respuesta;
+        }
+    }
+
+    // ===== MÉTODOS DE BÚSQUEDA =====
+    private void AbrirModalBuscar() => IsModalBuscarVisible = true;
+    private void CerrarModalBuscar() => IsModalBuscarVisible = false;
+    private void AplicarBusqueda() { filtroActivo = textoBusqueda; IsModalBuscarVisible = false; }
+    private void LimpiarFiltro() { filtroActivo = ""; textoBusqueda = ""; }
+
+    // ===== MÉTODOS CRUD =====
+    private async Task AbrirModalCrear() => await OpenModal("Crear Entregable", null);
+    private async Task AbrirModalEditar(Entregable entregable) => await OpenModal("Editar Entregable", entregable);
+
+    private async Task OpenModal(string accion, Entregable? entregable)
+    {
+        if (accion == "Crear Entregable")
+        {
+            titulo = "Crear Entregable";
+            Tuentregable = new Entregable
+            {
+                FechaInicio = DateTime.Now,
+                FechaFinPrevista = DateTime.Now.AddDays(30),
+                FechaModificacion = DateTime.Now.AddDays(30),
+                FechaFinalizacion = DateTime.Now.AddDays(30)
+            };
+            metodo = async () => await Crear();
+        }
+        else if (accion == "Editar Entregable" && entregable != null)
+        {
+            titulo = "Editar Entregable";
+            Tuentregable = new Models.Entregable
+            {
+                Id = entregable.Id,
+                Codigo = entregable.Codigo,
+                Titulo = entregable.Titulo,
+                Descripcion = entregable.Descripcion,
+                FechaInicio = entregable.FechaInicio,
+                FechaFinPrevista = entregable.FechaFinPrevista,
+                FechaModificacion = entregable.FechaModificacion,
+                FechaFinalizacion = entregable.FechaFinalizacion
+            };
+            metodo = async () => await actualizar(Tuentregable);
+        }
+
+        IsModalVisible = true;
+        await InvokeAsync(StateHasChanged);
+    }
+    public void vaciarMensaje()
+    {
+        mensaje = "";
+    }
+
+   private async Task Crear()
+{
+    CUEntregable newResp = new CUEntregable
+    {
+        Codigo = Tuentregable.Codigo,
+        Titulo = Tuentregable.Titulo,
+        Descripcion = Tuentregable.Descripcion,
+        FechaInicio = Tuentregable.FechaInicio,
+        FechaFinPrevista = Tuentregable.FechaFinPrevista,
+        FechaModificacion = Tuentregable.FechaModificacion,
+        FechaFinalizacion = Tuentregable.FechaFinalizacion
+    };
+
+    var respuesta = await EntregableService.PostEntregable(newResp);
+    if (respuesta != null)
+    {
+        mensaje = respuesta.Mensaje;
+        if (respuesta.Estado == 200)
+        {
+            entregables = (await EntregableService.GetEntregables()).ToList();
+        }
+    }
+    IsModalVisible = false;
+}
+
+ private async Task actualizar(Entregable entregableUP)
+{
+    CUEntregable EntregableNEW = new CUEntregable
+    {
+        Codigo = entregableUP.Codigo,
+        Titulo = entregableUP.Titulo,
+        Descripcion = entregableUP.Descripcion,
+        FechaInicio = entregableUP.FechaInicio,
+        FechaFinPrevista = entregableUP.FechaFinPrevista,
+        FechaModificacion = entregableUP.FechaModificacion,
+        FechaFinalizacion = entregableUP.FechaFinalizacion
+    };
+
+    int id = entregableUP.Id;
+
+    // Llamada correcta al servicio
+    var respuesta = await EntregableService.PutEntregable(EntregableNEW, "Id", id);
+
+    if (respuesta != null)
+    {
+        mensaje = respuesta.Mensaje;
+        if (respuesta.Estado == 200)
+        {
+            entregables = (await EntregableService.GetEntregables()).ToList();
+            IsModalVisible = false;
+        }
+    }
+}
+
+ private async Task Eliminar(Entregable entregable)
+{
+    int id = entregable.Id;
+
+    var respuesta = await EntregableService.DeleteEntregable("Id", id);
+
+    if (respuesta != null)
+    {
+        mensaje = respuesta.Mensaje;
+        if (respuesta.Estado == 200)
+        {
+            entregables = (await EntregableService.GetEntregables()).ToList();
+        }
+    }
+}
+
+}

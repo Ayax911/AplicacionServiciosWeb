@@ -1,0 +1,459 @@
+﻿h3 {
+    color: dodgerblue;
+}
+/* En tu archivo CSS o en <style> del componente */
+.search-container {
+    position: relative;
+    width: 100%;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 16px 12px 48px; /* padding-left extra para el icono */
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+    background-color: #f1f5f9;
+}
+
+    .search-input:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+.search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    pointer-events: none; /* Para que no interfiera con los clicks */
+}
+
+.pill-filtros {
+    border-radius: 9999px;
+    border: none;
+}
+
+.pill-default {
+    background: #f1f5f9; /* Gris claro suave */
+    color: #64748b; /* Gris medio para texto */
+}
+
+/* SELECCIONADA */
+.pill-active {
+    background: #2563eb; /* Azul corporativo */
+    color: #ffffff; /* Blanco */
+}
+
+/* HOVER (no seleccionada) */
+.pill-hover {
+    background: #e2e8f0; /* Gris un poco más oscuro - slate-200 */
+    color: #64748b; /* Mismo texto */
+}
+
+.card {
+    border-radius: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Sombra más suave */
+    border: 1px solid #e2e8f0;
+    overflow: hidden; /* MUY IMPORTANTE - corta las esquinas */
+}
+
+.table-header-custom {
+    background: #f1f5f9 !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+}
+
+    .table-header-custom th {
+        padding: 16px 24px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #475569 !important;
+        text-align: left !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        background: #f1f5f9 !important;
+    }
+
+        .table-header-custom th:first-child {
+            padding-left: 24px; /* Alineación con el borde */
+        }
+
+        .table-header-custom th:last-child {
+            padding-right: 24px; /* Alineación con el borde */
+        }
+
+.table-custom {
+    border-collapse: collapse; /* Cambiar a collapse */
+    width: 100%;
+    margin-bottom: 0 !important; /* Quitar margen inferior */
+}
+
+    .table-custom tbody tr {
+        border-bottom: 1px solid #f1f5f9;
+        transition: background-color 0.2s;
+    }
+
+        .table-custom tbody tr:last-child {
+            border-bottom: none; /* Quitar borde de última fila */
+        }
+
+        .table-custom tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+    .table-custom tbody td {
+        padding: 16px 24px;
+        color: #64748b;
+    }
+
+        .table-custom tbody td:first-child {
+            padding-left: 24px; /* Alineación con el borde */
+        }
+
+        .table-custom tbody td:last-child {
+            padding-right: 24px; /* Alineación con el borde */
+        }
+
+.btn-action {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 16px;
+}
+
+.btn-action-view {
+    background-color: transparent;
+    color: #3b82f6;
+}
+
+    .btn-action-view:hover {
+        background-color: #dbeafe;
+    }
+
+.btn-action-edit {
+    background-color: transparent;
+    color: #2563eb;
+}
+
+    .btn-action-edit:hover {
+        background-color: #dbeafe;
+    }
+
+.btn-action-delete {
+    background-color: transparent;
+    color: #ef4444;
+}
+
+    .btn-action-delete:hover {
+        background-color: #fee2e2;
+    }
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    text-transform: uppercase;
+    flex-shrink: 0; /* Para que no se deforme */
+}
+
+.detalle-header {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    padding: 24px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Separa contenido y botón X */
+}
+
+.avatar-circle-large {
+    width: 64px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 24px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    backdrop-filter: blur(10px);
+}
+
+.btn-close-white {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+    .btn-close-white:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+.info-card {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border-left: 4px solid #2563eb;
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+}
+
+    .info-card:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .info-card h6 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1e40af;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .info-card p {
+        font-size: 14px;
+        color: #64748b;
+        margin: 0;
+        line-height: 1.6;
+    }
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Card del Formulario */
+.form-card {
+    background: white;
+    border-radius: 16px;
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Header del Formulario */
+.form-header {
+    padding: 24px 32px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    background: linear-gradient(to bottom, #ffffff, #f8fafc);
+}
+
+    .form-header h4 {
+        font-size: 24px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+    }
+
+    .form-header p {
+        font-size: 14px;
+        color: #64748b;
+    }
+
+.btn-close-icon {
+    width: 40px;
+    height: 40px;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 8px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+    .btn-close-icon:hover {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+/* Body del Formulario */
+.form-body {
+    padding: 32px;
+    overflow-y: auto;
+    max-height: calc(90vh - 200px);
+}
+
+/* Labels Personalizados */
+.form-label-custom {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+    .form-label-custom .text-danger {
+        color: #ef4444;
+    }
+
+/* Inputs y Selects Personalizados */
+.form-control-custom {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #1e293b;
+    background: white;
+    transition: all 0.2s;
+    outline: none;
+}
+
+    .form-control-custom:focus {
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-control-custom::placeholder {
+        color: #94a3b8;
+    }
+
+    .form-control-custom:disabled {
+        background: #f8fafc;
+        cursor: not-allowed;
+    }
+
+/* Select específico */
+select.form-control-custom {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%2364748b' d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+/* Footer del Formulario */
+.form-footer {
+    padding: 24px 32px;
+    border-top: 1px solid #e2e8f0;
+    background: #f8fafc;
+    display: flex;
+    gap: 12px;
+}
+
+    .form-footer .btn {
+        font-weight: 600;
+        padding: 12px 24px;
+        border-radius: 10px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .form-footer .btn-primary {
+        background: linear-gradient(135deg, #2563eb, #1e40af);
+        border: none;
+        color: white;
+    }
+
+        .form-footer .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
+        }
+
+    .form-footer .btn-secondary {
+        background: white;
+        border: 2px solid #e2e8f0;
+        color: #64748b;
+    }
+
+        .form-footer .btn-secondary:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-card {
+        max-width: 100%;
+        margin: 0;
+        border-radius: 16px 16px 0 0;
+        max-height: 95vh;
+    }
+
+    .form-header,
+    .form-body,
+    .form-footer {
+        padding: 20px;
+    }
+
+    .form-footer {
+        flex-direction: column;
+    }
+
+        .form-footer .btn {
+            width: 100%;
+        }
+}
