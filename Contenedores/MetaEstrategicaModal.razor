@@ -1,0 +1,90 @@
+﻿@using BlazorApp1.Models
+@using BlazorApp1.Models.DTO
+@using BlazorApp1.Models.ENTIDADES
+
+
+@if (IsModalVisible)
+{
+    <div class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50
+                        d-flex justify-content-center align-items-center"
+         style="z-index: 1050;">
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content shadow-lg">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">@Title</h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <EditForm Model="@metaEstrategica" OnValidSubmit="@Metodo">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="text-danger" />
+
+                            <!-- Selección de Objetivo Estratégico -->
+                            <div class="mb-3">
+                                <label for="objetivo" class="form-label">Objetivo Estratégico</label>
+                                <select id="objetivo" class="form-select" @bind="metaEstrategica.IdObjetivo">
+                                    <option value="">-- Seleccione un objetivo --</option>
+                                    @foreach (var objetivo in ObjetivosEstrategicos)
+                                    {
+                                        <option value="@objetivo.Id">@objetivo.Titulo</option>
+                                    }
+                                </select>
+                                <ValidationMessage For="@(() => metaEstrategica.IdObjetivo)" class="text-danger" />
+                            </div>
+
+                            <!-- Campo: Título -->
+                            <div class="mb-3">
+                                <label for="titulo" class="form-label">Título</label>
+                                <InputText id="titulo" class="form-control" @bind-Value="metaEstrategica.Titulo" />
+                                <ValidationMessage For="@(() => metaEstrategica.Titulo)" class="text-danger" />
+                            </div>
+
+                            <!-- Campo: Descripción -->
+                            <div class="mb-3">
+                                <label for="descripcion" class="form-label">Descripción</label>
+                                <InputTextArea id="descripcion" class="form-control" rows="4"
+                                               @bind-Value="metaEstrategica.Descripcion" />
+                                <ValidationMessage For="@(() => metaEstrategica.Descripcion)" class="text-danger" />
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg"></i> Guardar
+                                </button>
+                                <button type="button" class="btn btn-secondary" @onclick="CloseModal">
+                                    <i class="bi bi-x-lg"></i> Cancelar
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Título del modal (Ej: "Agregar Meta Estratégica", "Editar Meta Estratégica")</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>Modelo actual de la meta (crear o editar)</summary>
+    [Parameter] public DTOMetaEstrategica? metaEstrategica { get; set; }
+
+    /// <summary>Indica si el modal está visible</summary>
+    [Parameter] public bool IsModalVisible { get; set; }
+
+    /// <summary>Lista de objetivos estratégicos disponibles para seleccionar</summary>
+    [Parameter] public List<ObjetivoEstrategico> ObjetivosEstrategicos { get; set; } = new();
+
+    /// <summary>Método que se ejecuta al enviar el formulario (crear o actualizar)</summary>
+    [Parameter] public Func<Task>? Metodo { get; set; }
+
+    /// <summary>Cierra el modal</summary>
+    public void CloseModal()
+    {
+        IsModalVisible = false;
+        StateHasChanged();
+    }
+}

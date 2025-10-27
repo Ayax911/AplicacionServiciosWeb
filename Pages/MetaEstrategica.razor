@@ -1,0 +1,289 @@
+﻿@page "/metasestrategicas"
+@using BlazorApp1.Contenedores
+@using BlazorApp1.Models
+@using BlazorApp1.Models.DTO
+@using BlazorApp1.Models.ENTIDADES
+@inject Servicios.ServiciosMetaEstrategica serviciosMetaEstrategica
+
+<h3 class="">Gestión de Metas Estratégicas</h3>
+<p>Administra las metas estratégicas asociadas a tus objetivos de manera eficiente.</p>
+
+<div class="mb-3">
+    <div class="card">
+        <div class="card-body">
+            <div class="search-container" @onclick="AbrirModalBusqueda" style="cursor: pointer;">
+                <input type="text"
+                       class="search-input"
+                       placeholder="Buscar metas estratégicas..."
+                       value="@textoBusqueda"
+                       readonly />
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </div>
+
+            <div class="d-flex align-items-center mt-2 gap-3">
+                <button class="pill-filtros @GetPillClass("todos")"
+                        @onclick="() => ReiniciarFiltro()">
+                    Todos (@metas.Count)
+                </button>
+
+                @foreach (var objetivo in objetivosEstrategicos)
+                {
+                    <button class="pill-filtros @GetPillClass(objetivo)"
+                            @onclick="() => filterTipo = objetivo">
+                        @objetivo (@GetCount(objetivo))
+                    </button>
+                }
+
+                <button class="btn btn-primary ms-auto" @onclick="AbrirModalCrear">
+                    <i class="bi bi-plus"></i> Agregar Meta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-custom table-hover">
+            <thead class="table-header-custom">
+                <tr>
+                    <th>Título</th>
+                    <th>Objetivo Estratégico</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (metasFiltradas.Any())
+                {
+                    @foreach (var meta in metasFiltradas)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle">
+                                        @ObtenerIniciales(meta.Titulo)
+                                    </div>
+                                    @meta.Titulo
+                                </div>
+                            </td>
+                            <td>@meta.Objetivo</td>
+                            <td>@meta.Descripcion</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn-action btn-action-edit"
+                                            title="Editar"
+                                            @onclick="() => AbrirModalEditar(meta)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+
+                                    <button class="btn-action btn-action-delete"
+                                            title="Eliminar"
+                                            @onclick="() => ConfirmarEliminar(meta)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="text-center py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem; color: #ccc;"></i>
+                            <p class="text-muted mt-2">No se encontraron metas estratégicas</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de Búsqueda -->
+<BusquedaModal IsModalVisible="@mostrarModalBusqueda"
+               Titulo="Buscar Meta Estratégica"
+               Placeholder="Título, descripción u objetivo estratégico..."
+               MensajeInfo="Se buscarán coincidencias en título, descripción y objetivo estratégico"
+               TextoBusqueda="@textoBusqueda"
+               TextoBusquedaChanged="@((valor) => { textoBusqueda = valor; })"
+               OnBuscar="@RealizarBusqueda"
+               OnCerrar="@CerrarModalBusqueda" />
+
+<!-- Modal de Meta Estratégica -->
+<MetaEstrategicaModal Title="@tituloModal"
+                      metaEstrategica="@metaActual"
+                      IsModalVisible="@mostrarModal"
+                      Metodo="@GuardarMeta"
+                      ObjetivosEstrategicos="@objetivosParaModal" />
+
+@code {
+    private List<Models.DTO.DTOMetaEstrategica> metas = new();
+    private List<string> objetivosEstrategicos = new();
+    private List<Models.ENTIDADES.ObjetivoEstrategico> objetivosParaModal = new();
+
+    private string filterTipo = "todos";
+    private string textoBusqueda = "";
+
+    // Modal CRUD
+    private bool mostrarModal = false;
+    private string tituloModal = "";
+    private Models.DTO.DTOMetaEstrategica metaActual = new();
+
+    // Modal búsqueda
+    private bool mostrarModalBusqueda = false;
+
+    // Lista filtrada
+    private List<Models.DTO.DTOMetaEstrategica> metasFiltradas =>
+        FiltrarMetas();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        await GetMetasEstrategicas();
+        ObtenerTipos();
+        objetivosParaModal = await serviciosMetaEstrategica.ObtenerObjetivosEstrategicosAsync();
+    }
+
+    private async Task GetMetasEstrategicas()
+    {
+        try
+        {
+            metas = await serviciosMetaEstrategica.ObtenerMetasEstrategicasAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener metas estratégicas: {ex.Message}");
+        }
+    }
+
+    private List<Models.DTO.DTOMetaEstrategica> FiltrarMetas()
+    {
+        var resultado = metas.AsEnumerable();
+
+        if (filterTipo != "todos")
+        {
+            resultado = resultado.Where(m => m.Objetivo == filterTipo);
+        }
+
+        if (!string.IsNullOrWhiteSpace(textoBusqueda))
+        {
+            var busqueda = textoBusqueda.ToLower();
+            resultado = resultado.Where(m =>
+                (m.Titulo?.ToLower().Contains(busqueda) ?? false) ||
+                (m.Descripcion?.ToLower().Contains(busqueda) ?? false) ||
+                (m.Objetivo?.ToLower().Contains(busqueda) ?? false)
+            );
+        }
+
+        return resultado.ToList();
+    }
+
+    private string GetPillClass(string tipoId) =>
+        filterTipo == tipoId ? "pill-active" : "pill-default";
+
+    private void ReiniciarFiltro() => filterTipo = "todos";
+
+    private int GetCount(string objetivo) =>
+        metas.Count(m => m.Objetivo == objetivo);
+
+    private void ObtenerTipos()
+    {
+        objetivosEstrategicos.Clear();
+        foreach (var meta in metas)
+        {
+            if (!string.IsNullOrEmpty(meta.Objetivo) && !objetivosEstrategicos.Contains(meta.Objetivo))
+                objetivosEstrategicos.Add(meta.Objetivo);
+        }
+    }
+
+    private void AbrirModalBusqueda() => mostrarModalBusqueda = true;
+    private void CerrarModalBusqueda() => mostrarModalBusqueda = false;
+    private void RealizarBusqueda() { CerrarModalBusqueda(); StateHasChanged(); }
+
+    private void AbrirModalCrear()
+    {
+        tituloModal = "Agregar Meta Estratégica";
+        metaActual = new Models.DTO.DTOMetaEstrategica();
+        mostrarModal = true;
+    }
+
+    private void AbrirModalEditar(Models.DTO.DTOMetaEstrategica meta)
+    {
+        tituloModal = "Editar Meta Estratégica";
+        metaActual = new Models.DTO.DTOMetaEstrategica
+        {
+            Id = meta.Id,
+            IdObjetivo = meta.IdObjetivo,
+            Titulo = meta.Titulo,
+            Descripcion = meta.Descripcion,
+            Objetivo = meta.Objetivo
+        };
+        mostrarModal = true;
+    }
+
+    private async Task GuardarMeta()
+    {
+        try
+        {
+            var meta = new Models.ENTIDADES.MetaEstrategica
+            {
+                Id = metaActual.Id,
+                IdObjetivo = metaActual.IdObjetivo,
+                Titulo = metaActual.Titulo,
+                Descripcion = metaActual.Descripcion
+            };
+
+            Models.DTO.DTOMetaEstrategica? resultado;
+
+            if (tituloModal.Contains("Agregar"))
+                resultado = await serviciosMetaEstrategica.CrearMetaEstrategicaAsync(meta);
+            else
+                resultado = await serviciosMetaEstrategica.ActualizarMetaEstrategicaAsync(meta);
+
+            if (resultado != null)
+            {
+                await CargarDatos();
+                mostrarModal = false;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al guardar meta: {ex.Message}");
+        }
+    }
+
+    private async Task ConfirmarEliminar(Models.DTO.DTOMetaEstrategica meta)
+    {
+        try
+        {
+            var exito = await serviciosMetaEstrategica.EliminarMetaEstrategicaAsync(meta.Id);
+            if (exito)
+            {
+                await CargarDatos();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al eliminar meta: {ex.Message}");
+        }
+    }
+
+    private string ObtenerIniciales(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) return "";
+        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 1) return partes[0].Substring(0, Math.Min(1, partes[0].Length)).ToUpper();
+        return string.Concat(partes[0][0], partes[1][0]).ToUpper();
+    }
+}

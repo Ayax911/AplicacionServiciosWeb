@@ -18,4 +18,6 @@ builder.Services.AddScoped<ServiciosVariableEstrategica>();
 builder.Services.AddScoped<ServiciosEntregable>();
 builder.Services.AddScoped<ServiciosReponsable>();
 builder.Services.AddScoped<ServiciosProyecto>();
+builder.Services.AddScoped<ServiciosObjetivoEstrategico>();
+builder.Services.AddScoped<ServiciosMetaEstrategica>();
 await builder.Build().RunAsync();

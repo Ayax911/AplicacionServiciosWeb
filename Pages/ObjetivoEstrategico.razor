@@ -1,0 +1,339 @@
+﻿@inject Servicios.ServiciosObjetivoEstrategico serviciosObjetivoEstrategico
+@page "/objetivosestrategicos"
+@using BlazorApp1.Contenedores
+@using BlazorApp1.Models
+@using BlazorApp1.Models.ENTIDADES;
+@using BlazorApp1.Models.DTO;
+
+
+<h3 class="">Gestión de Objetivos Estratégicos</h3>
+<p>Administra los objetivos estratégicos de tus proyectos de manera eficiente.</p>
+
+<div class="mb-3">
+    <div class="card">
+        <div class="card-body">
+            <div class="search-container" @onclick="AbrirModalBusqueda" style="cursor: pointer;">
+                <input type="text"
+                       class="search-input"
+                       placeholder="Buscar objetivos estratégicos..."
+                       value="@textoBusqueda"
+                       readonly />
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </div>
+
+            <div class="d-flex align-items-center mt-2 gap-3">
+                <button class="pill-filtros @GetPillClass("todos")"
+                        @onclick="() => ReiniciarFiltro()">
+                    Todos (@objetivos.Count)
+                </button>
+
+                @foreach (var variable in variablesEstrategicas)
+                {
+                    <button class="pill-filtros @GetPillClass(variable)"
+                            @onclick="() => filterTipo = variable">
+                        @variable (@GetCount(variable))
+                    </button>
+                }
+
+                <button class="btn btn-primary ms-auto" @onclick="AbrirModalCrear">
+                    <i class="bi bi-plus"></i> Agregar Objetivo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-custom table-hover">
+            <thead class="table-header-custom">
+                <tr>
+                    <th>Título</th>
+                    <th>Variable Estratégica</th>
+                    <th>Descripción</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (objetivosFiltrados.Any())
+                {
+                    @foreach (var objetivo in objetivosFiltrados)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle">
+                                        @ObtenerIniciales(objetivo.Titulo)
+                                    </div>
+                                    @objetivo.Titulo
+                                </div>
+                            </td>
+                            <td>@objetivo.Variable</td>
+                            <td>@objetivo.Descripcion</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    
+
+                                    <button class="btn-action btn-action-edit"
+                                            title="Editar"
+                                            @onclick="() => AbrirModalEditar(objetivo)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+
+                                    <button class="btn-action btn-action-delete"
+                                            title="Eliminar"
+                                            @onclick="() => ConfirmarEliminar(objetivo)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" class="text-center py-4">
+                            <i class="bi bi-inbox" style="font-size: 2rem; color: #ccc;"></i>
+                            <p class="text-muted mt-2">No se encontraron objetivos estratégicos</p>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal de Búsqueda -->
+<BusquedaModal IsModalVisible="@mostrarModalBusqueda"
+               Titulo="Buscar Objetivo Estratégico"
+               Placeholder="Título, descripción o variable estratégica..."
+               MensajeInfo="Se buscarán coincidencias en título, descripción y variable estratégica"
+               TextoBusqueda="@textoBusqueda"
+               TextoBusquedaChanged="@((valor) => { textoBusqueda = valor; })"
+               OnBuscar="@RealizarBusqueda"
+               OnCerrar="@CerrarModalBusqueda" />
+
+<!-- Modal de Objetivo Estratégico -->
+<ObjetivoEstrategicoModal Title="@tituloModal"
+                          objetivoEstrategico="@objetivoActual"
+                          IsModalVisible="@mostrarModal"
+                          Metodo="@GuardarObjetivo"
+                          VariablesEstrategicas="@variablesParaModal" />
+
+@code {
+    private List<Models.DTO.DTOObjetivoEstrategico> objetivos = new();
+    private List<string> variablesEstrategicas = new();
+    private List<Models.VariableEstrategica> variablesParaModal = new();
+
+    private string filterTipo = "todos";
+    private string textoBusqueda = "";
+
+    // Variables del modal CRUD
+    private bool mostrarModal = false;
+    private string tituloModal = "";
+    private Models.DTO.DTOObjetivoEstrategico objetivoActual = new();
+
+    // Variable del modal de búsqueda
+    private bool mostrarModalBusqueda = false;
+
+    // Lista filtrada
+    private List<Models.DTO.DTOObjetivoEstrategico> objetivosFiltrados =>
+        FiltrarObjetivos();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        await GetObjetivosEstrategicos();
+        ObtenerTipos();
+        variablesParaModal = await serviciosObjetivoEstrategico.ObtenerVariablesEstrategicasAsync();
+    }
+
+    private async Task GetObjetivosEstrategicos()
+    {
+        try
+        {
+            objetivos = await serviciosObjetivoEstrategico.ObtenerObjetivosEstrategicosAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener objetivos estratégicos: {ex.Message}");
+        }
+    }
+
+    
+
+    private List<Models.DTO.DTOObjetivoEstrategico> FiltrarObjetivos()
+    {
+        var resultado = objetivos.AsEnumerable();
+
+        
+        if (filterTipo != "todos")
+        {
+            resultado = resultado.Where(o => o.Variable == filterTipo);
+        }
+
+        
+        if (!string.IsNullOrWhiteSpace(textoBusqueda))
+        {
+            var busqueda = textoBusqueda.ToLower();
+            resultado = resultado.Where(o =>
+                (o.Titulo?.ToLower().Contains(busqueda) ?? false) ||
+                (o.Descripcion?.ToLower().Contains(busqueda) ?? false) ||
+                (o.Variable?.ToLower().Contains(busqueda) ?? false)
+            );
+        }
+
+        return resultado.ToList();
+    }
+
+    private string GetPillClass(string tipoId)
+    {
+        return filterTipo == tipoId ? "pill-active" : "pill-default";
+    }
+
+    private void ReiniciarFiltro()
+    {
+        filterTipo = "todos";
+    }
+
+    private int GetCount(string variable)
+    {
+        return objetivos.Count(oe => oe.Variable == variable);
+    }
+
+    private void ObtenerTipos()
+    {
+        variablesEstrategicas.Clear();
+        foreach (var obj in objetivos)
+        {
+            if (!string.IsNullOrEmpty(obj.Variable) && !variablesEstrategicas.Contains(obj.Variable))
+            {
+                variablesEstrategicas.Add(obj.Variable);
+            }
+        }
+    }
+
+
+
+    private void AbrirModalBusqueda()
+    {
+        mostrarModalBusqueda = true;
+    }
+
+    private void CerrarModalBusqueda()
+    {
+        mostrarModalBusqueda = false;
+    }
+
+    private void RealizarBusqueda()
+    {
+        // El filtrado se hace automáticamente a través de objetivosFiltrados
+        CerrarModalBusqueda();
+        StateHasChanged();
+    }
+
+    // ==================== MODAL CRUD ====================
+
+    private void AbrirModalCrear()
+    {
+        tituloModal = "Agregar Objetivo Estratégico";
+        objetivoActual = new Models.DTO.DTOObjetivoEstrategico();
+        mostrarModal = true;
+    }
+
+    private void AbrirModalEditar(Models.DTO.DTOObjetivoEstrategico objetivo)
+    {
+        tituloModal = "Editar Objetivo Estratégico";
+        objetivoActual = new Models.DTO.DTOObjetivoEstrategico
+        {
+            Id = objetivo.Id,              // ⬅️ IMPORTANTE: Pasar el Id
+            IdVariable = objetivo.IdVariable,
+            Titulo = objetivo.Titulo,
+            Descripcion = objetivo.Descripcion,
+            Variable = objetivo.Variable
+        };
+        mostrarModal = true;
+    }
+
+    private async Task GuardarObjetivo()
+    {
+        try
+        {
+            var objetivo = new Models.ENTIDADES.ObjetivoEstrategico
+            {
+                Id = objetivoActual.Id,  // Para actualizar
+                IdVariable = objetivoActual.IdVariable,
+                Titulo = objetivoActual.Titulo,
+                Descripcion = objetivoActual.Descripcion
+            };
+
+            Models.DTO.DTOObjetivoEstrategico? resultado;
+
+            if (tituloModal.Contains("Agregar"))
+            {
+                resultado = await serviciosObjetivoEstrategico.CrearObjetivoEstrategicoAsync(objetivo);
+            }
+            else
+            {
+                resultado = await serviciosObjetivoEstrategico.ActualizarObjetivoEstrategicoAsync(objetivo);
+            }
+
+            if (resultado != null)
+            {
+                await CargarDatos();
+                mostrarModal = false;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al guardar objetivo: {ex.Message}");
+            // Aquí podrías mostrar un toast o mensaje de error al usuario
+        }
+    }
+
+  
+
+    private async Task ConfirmarEliminar(Models.DTO.DTOObjetivoEstrategico objetivo)
+    {
+        // TODO: Implementar un modal de confirmación bonito
+        // Por ahora, elimina directamente
+
+        try
+        {
+            var exito = await serviciosObjetivoEstrategico.EliminarObjetivoEstrategicoAsync(objetivo.Id);
+
+            if (exito)
+            {
+                await CargarDatos();
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al eliminar objetivo: {ex.Message}");
+            
+        }
+    }
+
+    private string ObtenerIniciales(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+            return "";
+
+        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        if (partes.Length == 1)
+            return partes[0].Substring(0, Math.Min(1, partes[0].Length)).ToUpper();
+
+        return string.Concat(partes[0][0], partes[1][0]).ToUpper();
+    }
+}
