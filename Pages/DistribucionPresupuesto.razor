@@ -1,0 +1,395 @@
+﻿@page "/distribucionpresupuesto"
+@using BlazorApp1.Contenedores
+@using BlazorApp1.Models
+@using BlazorApp1.Models.DTO
+@inject Servicios.ServiciosDistribucionPresupuesto serviciosDistribucionPresupuesto
+@inject IJSRuntime JSRuntime
+
+<h3 class="">Gestión de Distribución Presupuestaria</h3>
+<p>Distribuye presupuestos entre proyectos hijo para optimizar la asignación de recursos.</p>
+
+<div class="mb-3">
+    <div class="card">
+        <div class="card-body">
+            <div class="search-container" @onclick="AbrirModalBusqueda" style="cursor: pointer;">
+                <input type="text"
+                       class="search-input"
+                       placeholder="Buscar distribuciones..."
+                       value="@textoBusqueda"
+                       readonly />
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </div>
+
+            <div class="d-flex align-items-center mt-2 gap-3">
+                <button class="pill-filtros @GetPillClass("todos")"
+                        @onclick="ReiniciarFiltro">
+                    Todos (@distribuciones.Count)
+                </button>
+
+                @foreach (var presupuesto in presupuestosUnicos)
+                {
+                    <button class="pill-filtros @GetPillClass(presupuesto)"
+                            @onclick="() => filterTipo = presupuesto">
+                        @presupuesto (@GetCount(presupuesto))
+                    </button>
+                }
+
+                <button class="btn btn-primary ms-auto" @onclick="AbrirModalCrear">
+                    <i class="bi bi-plus"></i> Nueva Distribución
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-custom table-hover">
+            <thead class="table-header-custom">
+                <tr>
+                    <th>Presupuesto Padre</th>
+                    <th>Proyecto Hijo</th>
+                    <th>Código Proyecto</th>
+                    <th>Tipo Proyecto</th>
+                    <th>Monto Asignado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (distribucionesFiltradas.Any())
+                {
+                    @foreach (var distribucion in distribucionesFiltradas)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle" style="background-color: #0d6efd;">
+                                        <i class="bi bi-wallet2 text-white"></i>
+                                    </div>
+                                    <div>
+                                        <strong>Presupuesto #@distribucion.IdPresupuestoPadre</strong>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-circle" style="background-color: #198754;">
+                                        <i class="bi bi-folder-fill text-white"></i>
+                                    </div>
+                                    <div>
+                                        <strong>Proyecto #@distribucion.IdProyectoHijo</strong>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">Proyecto #@distribucion.IdProyectoHijo</span>
+                            </td>
+                            <td>
+                                <span class="text-muted">-</span>
+                            </td>
+                            <td>
+                                <strong class="text-success">@distribucion.MontoAsignado.ToString("C")</strong>
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn-action btn-action-edit"
+                                            title="Editar"
+                                            @onclick="() => AbrirModalEditar(distribucion)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+
+                                    <button class="btn-action btn-action-delete"
+                                            title="Eliminar"
+                                            @onclick="() => ConfirmarEliminar(distribucion)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                            <p class="text-muted mt-3 mb-0">No se encontraron distribuciones de presupuesto</p>
+                            <button class="btn btn-primary mt-3" @onclick="AbrirModalCrear">
+                                <i class="bi bi-plus me-2"></i>Crear Primera Distribución
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Mensaje))
+{
+    <div class="alert @(MensajeExito ? "alert-success" : "alert-danger") alert-dismissible fade show mt-3" role="alert">
+        <i class="bi @(MensajeExito ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill") me-2"></i>
+        @Mensaje
+        <button type="button" class="btn-close" @onclick="() => Mensaje = string.Empty"></button>
+    </div>
+}
+
+<!-- Modal de Búsqueda -->
+<BusquedaModal IsModalVisible="@mostrarModalBusqueda"
+               Titulo="Buscar Distribución Presupuestaria"
+               Placeholder="Presupuesto, proyecto, monto..."
+               MensajeInfo="Se buscarán coincidencias en presupuestos, proyectos y montos"
+               TextoBusqueda="@textoBusqueda"
+               TextoBusquedaChanged="@((valor) => { textoBusqueda = valor; })"
+               OnBuscar="@RealizarBusqueda"
+               OnCerrar="@CerrarModalBusqueda" />
+
+<!-- Modal de Distribución Presupuesto -->
+<DistribucionPresupuestoModal Title="@tituloModal"
+                              distribucionPresupuesto="@distribucionActual"
+                              IsModalVisible="@mostrarModal"
+                              PresupuestosPadre="@presupuestos"
+                              ProyectosHijo="@proyectos"
+                              Metodo="@GuardarDistribucion"
+                              EsEdicion="@esEdicion" />
+
+@code {
+    private List<DTODistribucionPresupuesto> distribuciones = new();
+    private List<DTOPresupuesto> presupuestos = new();
+    private List<DTOProyecto> proyectos = new();
+    private List<string> presupuestosUnicos = new();
+
+    private string filterTipo = "todos";
+    private string textoBusqueda = "";
+    private string Mensaje = string.Empty;
+    private bool MensajeExito = true;
+
+    // Modal CRUD
+    private bool mostrarModal = false;
+    private string tituloModal = "";
+    private DTODistribucionPresupuesto distribucionActual = new();
+    private bool esEdicion = false;
+
+    // Modal búsqueda
+    private bool mostrarModalBusqueda = false;
+
+    // Lista filtrada
+    private List<DTODistribucionPresupuesto> distribucionesFiltradas => FiltrarDistribuciones();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            distribuciones = await serviciosDistribucionPresupuesto.ObtenerDistribucionesPresupuestoAsync();
+            // presupuestos = await serviciosPresupuesto.ObtenerPresupuestosAsync();
+            // proyectos = await serviciosProyecto.ObtenerProyectosAsync();
+            //Para proyectos, no lo añado por lo de la autoreferencia
+            ObtenerPresupuestosUnicos();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar datos: {ex.Message}");
+            MostrarMensaje($"Error al cargar datos: {ex.Message}", false);
+        }
+    }
+
+    private void ObtenerPresupuestosUnicos()
+    {
+        presupuestosUnicos = distribuciones
+            .Select(d => $"Presupuesto #{d.IdPresupuestoPadre}")
+            .Distinct()
+            .ToList();
+    }
+
+    private List<DTODistribucionPresupuesto> FiltrarDistribuciones()
+    {
+        var resultado = distribuciones.AsEnumerable();
+
+        // Filtrar por presupuesto
+        if (filterTipo != "todos")
+        {
+            var presupuestoId = filterTipo.Replace("Presupuesto #", "");
+            if (int.TryParse(presupuestoId, out int id))
+            {
+                resultado = resultado.Where(d => d.IdPresupuestoPadre == id);
+            }
+        }
+
+        // Filtrar por búsqueda
+        if (!string.IsNullOrWhiteSpace(textoBusqueda))
+        {
+            var busqueda = textoBusqueda.ToLower();
+            resultado = resultado.Where(d =>
+                d.IdPresupuestoPadre.ToString().Contains(busqueda) ||
+                d.IdProyectoHijo.ToString().Contains(busqueda) ||
+                d.MontoAsignado.ToString().Contains(busqueda)
+            );
+        }
+
+        return resultado.ToList();
+    }
+
+    private string GetPillClass(string tipoId) => filterTipo == tipoId ? "pill-active" : "pill-default";
+    private void ReiniciarFiltro() => filterTipo = "todos";
+    private int GetCount(string presupuesto) => distribuciones.Count(d => $"Presupuesto #{d.IdPresupuestoPadre}" == presupuesto);
+
+    private void AbrirModalBusqueda() => mostrarModalBusqueda = true;
+    private void CerrarModalBusqueda() => mostrarModalBusqueda = false;
+    private void RealizarBusqueda() { CerrarModalBusqueda(); StateHasChanged(); }
+
+    private void AbrirModalCrear()
+    {
+        tituloModal = "Nueva Distribución Presupuestaria";
+        distribucionActual = new DTODistribucionPresupuesto();
+        esEdicion = false;
+        mostrarModal = true;
+    }
+
+    private void AbrirModalEditar(DTODistribucionPresupuesto distribucion)
+    {
+        tituloModal = "Editar Distribución Presupuestaria";
+        distribucionActual = new DTODistribucionPresupuesto
+        {
+            Id = distribucion.Id,
+            IdPresupuestoPadre = distribucion.IdPresupuestoPadre,
+            IdProyectoHijo = distribucion.IdProyectoHijo,
+            MontoAsignado = distribucion.MontoAsignado
+        };
+        esEdicion = true;
+        mostrarModal = true;
+    }
+
+    private async Task GuardarDistribucion()
+    {
+        try
+        {
+            // Validar campos requeridos
+            if (distribucionActual.IdPresupuestoPadre <= 0)
+            {
+                MostrarMensaje("Debe seleccionar un presupuesto padre.", false);
+                return;
+            }
+
+            if (distribucionActual.IdProyectoHijo <= 0)
+            {
+                MostrarMensaje("Debe seleccionar un proyecto hijo.", false);
+                return;
+            }
+
+            if (distribucionActual.MontoAsignado <= 0)
+            {
+                MostrarMensaje("El monto asignado debe ser mayor a cero.", false);
+                return;
+            }
+
+            DTODistribucionPresupuesto? resultado;
+
+            if (esEdicion)
+            {
+                // Actualizar distribución existente
+                resultado = await serviciosDistribucionPresupuesto.ActualizarDistribucionPresupuestoAsync(
+                    distribucionActual.Id,
+                    distribucionActual.MontoAsignado
+                );
+
+                if (resultado != null)
+                {
+                    MostrarMensaje("Distribución actualizada correctamente.", true);
+                }
+                else
+                {
+                    MostrarMensaje("Error al actualizar la distribución.", false);
+                }
+            }
+            else
+            {
+                // Verificar si ya existe la distribución
+                bool existe = await serviciosDistribucionPresupuesto.ExisteDistribucionAsync(
+                    distribucionActual.IdPresupuestoPadre,
+                    distribucionActual.IdProyectoHijo
+                );
+
+                if (existe)
+                {
+                    MostrarMensaje("Ya existe una distribución entre este presupuesto y este proyecto.", false);
+                    return;
+                }
+
+                // Crear nueva distribución
+                resultado = await serviciosDistribucionPresupuesto.CrearDistribucionPresupuestoAsync(
+                    distribucionActual.IdPresupuestoPadre,
+                    distribucionActual.IdProyectoHijo,
+                    distribucionActual.MontoAsignado
+                );
+
+                if (resultado != null)
+                {
+                    MostrarMensaje("Distribución creada correctamente.", true);
+                }
+                else
+                {
+                    MostrarMensaje("Error al crear la distribución.", false);
+                }
+            }
+
+            if (resultado != null)
+            {
+                await CargarDatos();
+                mostrarModal = false;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al guardar distribución: {ex.Message}");
+            MostrarMensaje($"Error: {ex.Message}", false);
+        }
+    }
+
+    private async Task ConfirmarEliminar(DTODistribucionPresupuesto distribucion)
+    {
+        bool confirmar = await JSRuntime.InvokeAsync<bool>(
+            "confirm",
+            $"¿Está seguro de eliminar la distribución del Presupuesto #{distribucion.IdPresupuestoPadre} al Proyecto #{distribucion.IdProyectoHijo}?"
+        );
+
+        if (confirmar)
+        {
+            try
+            {
+                var exito = await serviciosDistribucionPresupuesto.EliminarDistribucionPresupuestoAsync(distribucion.Id);
+
+                if (exito)
+                {
+                    MostrarMensaje("Distribución eliminada correctamente.", true);
+                    await CargarDatos();
+                    StateHasChanged();
+                }
+                else
+                {
+                    MostrarMensaje("Error al eliminar la distribución.", false);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al eliminar distribución: {ex.Message}");
+                MostrarMensaje($"Error: {ex.Message}", false);
+            }
+        }
+    }
+
+    private void MostrarMensaje(string mensaje, bool exito)
+    {
+        Mensaje = mensaje;
+        MensajeExito = exito;
+        StateHasChanged();
+    }
+}

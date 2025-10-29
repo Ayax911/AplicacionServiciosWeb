@@ -1,0 +1,199 @@
+﻿@using BlazorApp1.Models
+@using BlazorApp1.Models.DTO
+@using BlazorApp1.Models.ENTIDADES
+
+@if (IsModalVisible)
+{
+    <div class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50
+                    d-flex justify-content-center align-items-center"
+         style="z-index: 1050;">
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content shadow-lg">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-link-45deg me-2"></i>@Title
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <EditForm Model="@metaProyecto" OnValidSubmit="@Metodo">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="text-danger" />
+
+                            @if (!string.IsNullOrEmpty(MensajeError))
+                            {
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    @MensajeError
+                                    <button type="button" class="btn-close" @onclick="() => MensajeError = string.Empty"></button>
+                                </div>
+                            }
+
+                            <!-- Selección de Meta Estratégica -->
+                            <div class="mb-4">
+                                <label for="meta" class="form-label fw-semibold">
+                                    <i class="bi bi-bullseye text-primary me-2"></i>Meta Estratégica
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <select id="meta"
+                                        class="form-select form-select-lg @GetValidationClass(metaProyecto.IdMeta)"
+                                        @bind="metaProyecto.IdMeta"
+                                        disabled="@EsEdicion">
+                                    <option value="0">-- Seleccione una meta estratégica --</option>
+                                    @foreach (var meta in MetasEstrategicas)
+                                    {
+                                        <option value="@meta.Id">
+                                            @meta.Titulo (@meta.Objetivo)
+                                        </option>
+                                    }
+                                </select>
+                                @if (metaProyecto.IdMeta > 0)
+                                {
+                                    var metaSeleccionada = MetasEstrategicas.FirstOrDefault(m => m.Id == metaProyecto.IdMeta);
+                                    if (metaSeleccionada != null)
+                                    {
+                                        <div class="mt-2 p-3 bg-light rounded">
+                                            <small class="text-muted d-block mb-1">
+                                                <strong>Objetivo:</strong> @metaSeleccionada.Objetivo
+                                            </small>
+                                            <small class="text-muted">
+                                                <strong>Descripción:</strong> @metaSeleccionada.Descripcion
+                                            </small>
+                                        </div>
+                                    }
+                                }
+                                <ValidationMessage For="@(() => metaProyecto.IdMeta)" class="text-danger" />
+                            </div>
+
+                            <!-- Selección de Proyecto -->
+                            <div class="mb-4">
+                                <label for="proyecto" class="form-label fw-semibold">
+                                    <i class="bi bi-folder-fill text-success me-2"></i>Proyecto
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <select id="proyecto"
+                                        class="form-select form-select-lg @GetValidationClass(metaProyecto.IdProyecto)"
+                                        @bind="metaProyecto.IdProyecto"
+                                        disabled="@EsEdicion">
+                                    <option value="0">-- Seleccione un proyecto --</option>
+                                    @foreach (var proyecto in Proyectos)
+                                    {
+                                        <option value="@proyecto.Id">
+                                            [@proyecto.Codigo] @proyecto.Titulo
+                                        </option>
+                                    }
+                                </select>
+                                @if (metaProyecto.IdProyecto > 0)
+                                {
+                                    var proyectoSeleccionado = Proyectos.FirstOrDefault(p => p.Id == metaProyecto.IdProyecto);
+                                    if (proyectoSeleccionado != null)
+                                    {
+                                        <div class="mt-2 p-3 bg-light rounded">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <small class="text-muted d-block">
+                                                        <strong>Tipo:</strong> @proyectoSeleccionado.TipoProyecto
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <small class="text-muted d-block">
+                                                        <strong>Responsable:</strong> @proyectoSeleccionado.Responsable
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                <ValidationMessage For="@(() => metaProyecto.IdProyecto)" class="text-danger" />
+                            </div>
+
+                            <!-- Fecha de Asociación -->
+                            <div class="mb-4">
+                                <label for="fechaAsociacion" class="form-label fw-semibold">
+                                    <i class="bi bi-calendar-event text-info me-2"></i>Fecha de Asociación
+                                </label>
+                                <input type="date"
+                                       id="fechaAsociacion"
+                                       class="form-control form-control-lg"
+                                       @bind="metaProyecto.FechaAsociacion" />
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Fecha en que se establece la relación entre la meta y el proyecto
+                                </small>
+                            </div>
+
+                            @if (EsEdicion)
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    <strong>Modo edición:</strong> Solo puede modificar la fecha de asociación.
+                                    Para cambiar la meta o proyecto, elimine esta asociación y cree una nueva.
+                                </div>
+                            }
+
+                            <div class="modal-footer border-top pt-3">
+                                <button type="submit" class="btn btn-primary btn-lg px-4">
+                                    <i class="bi bi-check-lg me-2"></i>
+                                    @(EsEdicion ? "Actualizar" : "Crear Asociación")
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-lg px-4" @onclick="CloseModal">
+                                    <i class="bi bi-x-lg me-2"></i> Cancelar
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Título del modal</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>Modelo actual de la asociación Meta-Proyecto</summary>
+    [Parameter] public DTOMetaProyecto? metaProyecto { get; set; }
+
+    /// <summary>Indica si el modal está visible</summary>
+    [Parameter] public bool IsModalVisible { get; set; }
+
+    /// <summary>Lista de metas estratégicas disponibles</summary>
+    [Parameter] public List<DTOMetaEstrategica> MetasEstrategicas { get; set; } = new();
+
+    /// <summary>Lista de proyectos disponibles</summary>
+    [Parameter] public List<DTOProyecto> Proyectos { get; set; } = new();
+
+    /// <summary>Método que se ejecuta al enviar el formulario</summary>
+    [Parameter] public Func<Task>? Metodo { get; set; }
+
+    /// <summary>Indica si es modo edición (true) o creación (false)</summary>
+    [Parameter] public bool EsEdicion { get; set; } = false;
+
+    private string MensajeError = string.Empty;
+
+    /// <summary>Cierra el modal y limpia mensajes de error</summary>
+    public void CloseModal()
+    {
+        IsModalVisible = false;
+        MensajeError = string.Empty;
+        StateHasChanged();
+    }
+
+    /// <summary>Establece un mensaje de error para mostrar en el modal</summary>
+    public void MostrarError(string mensaje)
+    {
+        MensajeError = mensaje;
+        StateHasChanged();
+    }
+
+    /// <summary>Obtiene la clase CSS de validación para los selects</summary>
+    private string GetValidationClass(int valor)
+    {
+        if (valor == 0)
+            return "border-danger";
+        return "border-success";
+    }
+}

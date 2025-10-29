@@ -1,0 +1,362 @@
+﻿@page "/ejecucionpresupuesto"
+@using BlazorApp1.Contenedores
+@using BlazorApp1.Models.DTO
+@inject Servicios.ServiciosEjecucionPresupuesto serviciosEjecucionPresupuesto
+@inject IJSRuntime JSRuntime
+
+<h3 class="">Gestión de Ejecución Presupuestaria</h3>
+<p>Administra la ejecución y seguimiento de presupuestos por año.</p>
+
+<div class="mb-3">
+    <div class="card">
+        <div class="card-body">
+            <div class="search-container" @onclick="AbrirModalBusqueda" style="cursor: pointer;">
+                <input type="text"
+                       class="search-input"
+                       placeholder="Buscar ejecuciones..."
+                       value="@textoBusqueda"
+                       readonly />
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </div>
+
+            <div class="d-flex align-items-center mt-2 gap-3">
+                <button class="pill-filtros @GetPillClass("todos")"
+                        @onclick="ReiniciarFiltro">
+                    Todos (@ejecuciones.Count)
+                </button>
+
+                @foreach (var anio in aniosUnicos)
+                {
+                    <button class="pill-filtros @GetPillClass(anio.ToString())"
+                            @onclick="() => filterTipo = anio.ToString()">
+                        Año @anio (@GetCount(anio))
+                    </button>
+                }
+
+                <button class="btn btn-primary ms-auto" @onclick="AbrirModalCrear">
+                    <i class="bi bi-plus"></i> Nueva Ejecución
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-custom table-hover">
+            <thead class="table-header-custom">
+                <tr>
+                    <th>Presupuesto</th>
+                    <th>Año</th>
+                    <th>Monto Planeado</th>
+                    <th>Monto Ejecutado</th>
+                    <th>Observaciones</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (ejecucionesFiltradas.Any())
+                {
+                    @foreach (var ejecucion in ejecucionesFiltradas)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle" style="background-color: #0d6efd;">
+                                        <i class="bi bi-wallet2 text-white"></i>
+                                    </div>
+                                    <div>
+                                        <strong>Presupuesto #@ejecucion.IdPresupuesto</strong>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">@ejecucion.Anio</span>
+                            </td>
+                            <td>@ejecucion.MontoPlaneado.ToString("C")</td>
+                            <td>@ejecucion.MontoEjecutado.ToString("C")</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(ejecucion.Observaciones))
+                                {
+                                    <span title="@ejecucion.Observaciones">
+                                        @(ejecucion.Observaciones.Length > 50
+                                                                    ? ejecucion.Observaciones.Substring(0, 50) + "..."
+                                                                    : ejecucion.Observaciones)
+                        </span>
+                                                }
+                                else
+                                {
+                                    <span class="text-muted">Sin observaciones</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn-action btn-action-edit"
+                                            title="Editar"
+                                            @onclick="() => AbrirModalEditar(ejecucion)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+
+                                    <button class="btn-action btn-action-delete"
+                                            title="Eliminar"
+                                            @onclick="() => ConfirmarEliminar(ejecucion)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                            <p class="text-muted mt-3 mb-0">No se encontraron ejecuciones de presupuesto</p>
+                            <button class="btn btn-primary mt-3" @onclick="AbrirModalCrear">
+                                <i class="bi bi-plus me-2"></i>Crear Primera Ejecución
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Mensaje))
+{
+    <div class="alert @(MensajeExito ? "alert-success" : "alert-danger") alert-dismissible fade show mt-3" role="alert">
+        <i class="bi @(MensajeExito ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill") me-2"></i>
+        @Mensaje
+        <button type="button" class="btn-close" @onclick="() => Mensaje = string.Empty"></button>
+    </div>
+}
+
+<!-- Modal de Búsqueda -->
+<BusquedaModal IsModalVisible="@mostrarModalBusqueda"
+               Titulo="Buscar Ejecución Presupuestaria"
+               Placeholder="Año, monto, observaciones..."
+               MensajeInfo="Se buscarán coincidencias en año y observaciones"
+               TextoBusqueda="@textoBusqueda"
+               TextoBusquedaChanged="@((valor) => { textoBusqueda = valor; })"
+               OnBuscar="@RealizarBusqueda"
+               OnCerrar="@CerrarModalBusqueda" />
+
+<!-- Modal de Ejecución Presupuesto -->
+<EjecucionPresupuestoModal Title="@tituloModal"
+                           ejecucionPresupuesto="@ejecucionActual"
+                           IsModalVisible="@mostrarModal"
+                           Presupuestos="@presupuestos"
+                           Metodo="@GuardarEjecucion" />
+
+@code {
+    private List<DTOEjecucionPresupuesto> ejecuciones = new();
+    private List<DTOPresupuesto> presupuestos = new();
+    private List<int> aniosUnicos = new();
+
+    private string filterTipo = "todos";
+    private string textoBusqueda = "";
+    private string Mensaje = string.Empty;
+    private bool MensajeExito = true;
+
+    // Modal CRUD
+    private bool mostrarModal = false;
+    private string tituloModal = "";
+    private DTOEjecucionPresupuesto ejecucionActual = new();
+
+    // Modal búsqueda
+    private bool mostrarModalBusqueda = false;
+
+    // Lista filtrada
+    private List<DTOEjecucionPresupuesto> ejecucionesFiltradas => FiltrarEjecuciones();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            ejecuciones = await serviciosEjecucionPresupuesto.ObtenerEjecucionesPresupuestoAsync();
+            //presupuestos = await serviciosPresupuesto.ObtenerPresupuestosAsync();
+            //Se debe agregar el servicio de Listar presupuestos
+            ObtenerAniosUnicos();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar datos: {ex.Message}");
+            MostrarMensaje($"Error al cargar datos: {ex.Message}", false);
+        }
+    }
+
+    private void ObtenerAniosUnicos()
+    {
+        aniosUnicos = ejecuciones
+            .Select(e => e.Anio)
+            .Distinct()
+            .OrderByDescending(a => a)
+            .ToList();
+    }
+
+    private List<DTOEjecucionPresupuesto> FiltrarEjecuciones()
+    {
+        var resultado = ejecuciones.AsEnumerable();
+
+        // Filtrar por año
+        if (filterTipo != "todos")
+        {
+            if (int.TryParse(filterTipo, out int anio))
+            {
+                resultado = resultado.Where(e => e.Anio == anio);
+            }
+        }
+
+        // Filtrar por búsqueda
+        if (!string.IsNullOrWhiteSpace(textoBusqueda))
+        {
+            var busqueda = textoBusqueda.ToLower();
+            resultado = resultado.Where(e =>
+                e.Anio.ToString().Contains(busqueda) ||
+                e.MontoPlaneado.ToString().Contains(busqueda) ||
+                e.MontoEjecutado.ToString().Contains(busqueda) ||
+                (e.Observaciones?.ToLower().Contains(busqueda) ?? false)
+            );
+        }
+
+        return resultado.ToList();
+    }
+
+    private string GetPillClass(string tipoId) => filterTipo == tipoId ? "pill-active" : "pill-default";
+    private void ReiniciarFiltro() => filterTipo = "todos";
+    private int GetCount(int anio) => ejecuciones.Count(e => e.Anio == anio);
+
+    private void AbrirModalBusqueda() => mostrarModalBusqueda = true;
+    private void CerrarModalBusqueda() => mostrarModalBusqueda = false;
+    private void RealizarBusqueda() { CerrarModalBusqueda(); StateHasChanged(); }
+
+    private void AbrirModalCrear()
+    {
+        tituloModal = "Nueva Ejecución Presupuestaria";
+        ejecucionActual = new DTOEjecucionPresupuesto
+        {
+            Anio = DateTime.Now.Year
+        };
+        mostrarModal = true;
+    }
+
+    private void AbrirModalEditar(DTOEjecucionPresupuesto ejecucion)
+    {
+        tituloModal = "Editar Ejecución Presupuestaria";
+        ejecucionActual = new DTOEjecucionPresupuesto
+        {
+            Id = ejecucion.Id,
+            IdPresupuesto = ejecucion.IdPresupuesto,
+            Anio = ejecucion.Anio,
+            MontoPlaneado = ejecucion.MontoPlaneado,
+            MontoEjecutado = ejecucion.MontoEjecutado,
+            Observaciones = ejecucion.Observaciones
+        };
+        mostrarModal = true;
+    }
+
+    private async Task GuardarEjecucion()
+    {
+        try
+        {
+            // Validar campos requeridos
+            if (ejecucionActual.IdPresupuesto <= 0)
+            {
+                MostrarMensaje("Debe seleccionar un presupuesto.", false);
+                return;
+            }
+
+            if (ejecucionActual.Anio <= 0)
+            {
+                MostrarMensaje("Debe ingresar un año válido.", false);
+                return;
+            }
+
+            if (ejecucionActual.MontoPlaneado < 0 || ejecucionActual.MontoEjecutado < 0)
+            {
+                MostrarMensaje("Los montos no pueden ser negativos.", false);
+                return;
+            }
+
+            bool resultado = await serviciosEjecucionPresupuesto.GuardarEjecucionPresupuestoAsync(
+                ejecucionActual.Id > 0 ? ejecucionActual.Id : null,
+                ejecucionActual.IdPresupuesto,
+                ejecucionActual.Anio,
+                ejecucionActual.MontoPlaneado,
+                ejecucionActual.MontoEjecutado,
+                ejecucionActual.Observaciones
+            );
+
+            if (resultado)
+            {
+                MostrarMensaje(
+                    ejecucionActual.Id > 0
+                        ? "Ejecución actualizada correctamente."
+                        : "Ejecución creada correctamente.",
+                    true
+                );
+                await CargarDatos();
+                mostrarModal = false;
+                StateHasChanged();
+            }
+            else
+            {
+                MostrarMensaje("Error al guardar la ejecución.", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al guardar ejecución: {ex.Message}");
+            MostrarMensaje($"Error: {ex.Message}", false);
+        }
+    }
+
+    private async Task ConfirmarEliminar(DTOEjecucionPresupuesto ejecucion)
+    {
+        bool confirmar = await JSRuntime.InvokeAsync<bool>(
+            "confirm",
+            $"¿Está seguro de eliminar la ejecución del año {ejecucion.Anio}?"
+        );
+
+        if (confirmar)
+        {
+            try
+            {
+                var exito = await serviciosEjecucionPresupuesto.EliminarEjecucionPresupuestoAsync(ejecucion.Id);
+
+                if (exito)
+                {
+                    MostrarMensaje("Ejecución eliminada correctamente.", true);
+                    await CargarDatos();
+                    StateHasChanged();
+                }
+                else
+                {
+                    MostrarMensaje("Error al eliminar la ejecución.", false);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al eliminar ejecución: {ex.Message}");
+                MostrarMensaje($"Error: {ex.Message}", false);
+            }
+        }
+    }
+
+    private void MostrarMensaje(string mensaje, bool exito)
+    {
+        Mensaje = mensaje;
+        MensajeExito = exito;
+        StateHasChanged();
+    }
+}

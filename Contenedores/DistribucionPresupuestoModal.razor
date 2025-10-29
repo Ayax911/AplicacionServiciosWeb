@@ -1,0 +1,215 @@
+﻿@using BlazorApp1.Models.DTO
+@using BlazorApp1.Models
+
+@if (IsModalVisible)
+{
+    <div class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50
+                    d-flex justify-content-center align-items-center"
+         style="z-index: 1050;">
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content shadow-lg">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-distribute-vertical me-2"></i>@Title
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <EditForm Model="@distribucionPresupuesto" OnValidSubmit="@Metodo">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary class="text-danger" />
+
+                            @if (!string.IsNullOrEmpty(MensajeError))
+                            {
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                    @MensajeError
+                                    <button type="button" class="btn-close" @onclick="() => MensajeError = string.Empty"></button>
+                                </div>
+                            }
+
+                            <!-- Selección de Presupuesto Padre -->
+                            <div class="mb-4">
+                                <label for="presupuestoPadre" class="form-label fw-semibold">
+                                    <i class="bi bi-wallet2 text-primary me-2"></i>Presupuesto Padre
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <select id="presupuestoPadre"
+                                        class="form-select form-select-lg @GetValidationClass(distribucionPresupuesto.IdPresupuestoPadre)"
+                                        @bind="distribucionPresupuesto.IdPresupuestoPadre"
+                                        disabled="@EsEdicion">
+                                    <option value="0">-- Seleccione un presupuesto padre --</option>
+                                    @foreach (var presupuesto in PresupuestosPadre)
+                                    {
+                                        <option value="@presupuesto.Id">
+                                            @presupuesto.TituloProyecto - Año @presupuesto.PeriodoAnio
+                                            (Aprobado: @presupuesto.MontoAprobado?.ToString("C"))
+                                        </option>
+                                    }
+                                </select>
+                                @if (distribucionPresupuesto.IdPresupuestoPadre > 0)
+                                {
+                                    var presupuestoSeleccionado = PresupuestosPadre.FirstOrDefault(p => p.Id == distribucionPresupuesto.IdPresupuestoPadre);
+                                    if (presupuestoSeleccionado != null)
+                                    {
+                                        <div class="mt-2 p-3 bg-light rounded">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <small class="text-muted d-block">
+                                                        <strong>Proyecto:</strong> @presupuestoSeleccionado.TituloProyecto
+                                                    </small>
+                                                    <small class="text-muted d-block">
+                                                        <strong>Código:</strong> @presupuestoSeleccionado.CodigoProyecto
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <small class="text-muted d-block">
+                                                        <strong>Estado:</strong> @presupuestoSeleccionado.Estado
+                                                    </small>
+                                                    <small class="text-muted d-block">
+                                                        <strong>Monto Aprobado:</strong> @presupuestoSeleccionado.MontoAprobado?.ToString("C")
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                <ValidationMessage For="@(() => distribucionPresupuesto.IdPresupuestoPadre)" class="text-danger" />
+                            </div>
+
+                            <!-- Selección de Proyecto Hijo -->
+                            <div class="mb-4">
+                                <label for="proyectoHijo" class="form-label fw-semibold">
+                                    <i class="bi bi-folder-fill text-success me-2"></i>Proyecto Hijo
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <select id="proyectoHijo"
+                                        class="form-select form-select-lg @GetValidationClass(distribucionPresupuesto.IdProyectoHijo)"
+                                        @bind="distribucionPresupuesto.IdProyectoHijo"
+                                        disabled="@EsEdicion">
+                                    <option value="0">-- Seleccione un proyecto hijo --</option>
+                                    @foreach (var proyecto in ProyectosHijo)
+                                    {
+                                        <option value="@proyecto.Id">
+                                            [@proyecto.Codigo] @proyecto.Titulo
+                                        </option>
+                                    }
+                                </select>
+                                @if (distribucionPresupuesto.IdProyectoHijo > 0)
+                                {
+                                    var proyectoSeleccionado = ProyectosHijo.FirstOrDefault(p => p.Id == distribucionPresupuesto.IdProyectoHijo);
+                                    if (proyectoSeleccionado != null)
+                                    {
+                                        <div class="mt-2 p-3 bg-light rounded">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <small class="text-muted d-block">
+                                                        <strong>Tipo:</strong> @proyectoSeleccionado.TipoProyecto
+                                                    </small>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <small class="text-muted d-block">
+                                                        <strong>Responsable:</strong> @proyectoSeleccionado.Responsable
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                <ValidationMessage For="@(() => distribucionPresupuesto.IdProyectoHijo)" class="text-danger" />
+                            </div>
+
+                            <!-- Monto Asignado -->
+                            <div class="mb-4">
+                                <label for="montoAsignado" class="form-label fw-semibold">
+                                    <i class="bi bi-currency-dollar text-warning me-2"></i>Monto Asignado
+                                    <span class="text-danger">*</span>
+                                </label>
+                                <input type="number"
+                                       id="montoAsignado"
+                                       class="form-control form-control-lg"
+                                       @bind="distribucionPresupuesto.MontoAsignado"
+                                       step="0.01"
+                                       min="0" />
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Ingrese el monto que se asignará del presupuesto padre al proyecto hijo
+                                </small>
+                                <ValidationMessage For="@(() => distribucionPresupuesto.MontoAsignado)" class="text-danger" />
+                            </div>
+
+                            @if (EsEdicion)
+                            {
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle-fill me-2"></i>
+                                    <strong>Modo edición:</strong> Solo puede modificar el monto asignado.
+                                    Para cambiar el presupuesto o proyecto, elimine esta distribución y cree una nueva.
+                                </div>
+                            }
+
+                            <div class="modal-footer border-top pt-3">
+                                <button type="submit" class="btn btn-primary btn-lg px-4">
+                                    <i class="bi bi-check-lg me-2"></i>
+                                    @(EsEdicion ? "Actualizar" : "Crear Distribución")
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-lg px-4" @onclick="CloseModal">
+                                    <i class="bi bi-x-lg me-2"></i> Cancelar
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Título del modal</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>Modelo actual de distribución presupuesto</summary>
+    [Parameter] public DTODistribucionPresupuesto? distribucionPresupuesto { get; set; }
+
+    /// <summary>Indica si el modal está visible</summary>
+    [Parameter] public bool IsModalVisible { get; set; }
+
+    /// <summary>Lista de presupuestos padre disponibles</summary>
+    [Parameter] public List<DTOPresupuesto> PresupuestosPadre { get; set; } = new();
+
+    /// <summary>Lista de proyectos hijo disponibles</summary>
+    [Parameter] public List<DTOProyecto> ProyectosHijo { get; set; } = new();
+
+    /// <summary>Método que se ejecuta al enviar el formulario</summary>
+    [Parameter] public Func<Task>? Metodo { get; set; }
+
+    /// <summary>Indica si es modo edición (true) o creación (false)</summary>
+    [Parameter] public bool EsEdicion { get; set; } = false;
+
+    private string MensajeError = string.Empty;
+
+    /// <summary>Cierra el modal y limpia mensajes de error</summary>
+    public void CloseModal()
+    {
+        IsModalVisible = false;
+        MensajeError = string.Empty;
+        StateHasChanged();
+    }
+
+    /// <summary>Establece un mensaje de error para mostrar en el modal</summary>
+    public void MostrarError(string mensaje)
+    {
+        MensajeError = mensaje;
+        StateHasChanged();
+    }
+
+    /// <summary>Obtiene la clase CSS de validación para los selects</summary>
+    private string GetValidationClass(int valor)
+    {
+        if (valor == 0)
+            return "border-danger";
+        return "border-success";
+    }
+}

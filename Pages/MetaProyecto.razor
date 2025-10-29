@@ -1,0 +1,408 @@
+﻿@page "/metasproyectos"
+@using BlazorApp1.Contenedores
+@using BlazorApp1.Models
+@using BlazorApp1.Models.DTO
+@using BlazorApp1.Models.ENTIDADES
+@inject Servicios.ServiciosMetaProyecto serviciosMetaProyecto
+@inject Servicios.ServiciosMetaEstrategica serviciosMetaEstrategica
+@inject Servicios.ServiciosProyecto serviciosProyecto
+@inject IJSRuntime JSRuntime
+
+<h3 class="">Gestión de Metas por Proyecto</h3>
+<p>Asocia metas estratégicas con proyectos para alinear objetivos organizacionales.</p>
+
+<div class="mb-3">
+    <div class="card">
+        <div class="card-body">
+            <div class="search-container" @onclick="AbrirModalBusqueda" style="cursor: pointer;">
+                <input type="text"
+                       class="search-input"
+                       placeholder="Buscar asociaciones..."
+                       value="@textoBusqueda"
+                       readonly />
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+            </div>
+
+            <div class="d-flex align-items-center mt-2 gap-3">
+                <button class="pill-filtros @GetPillClass("todos")"
+                        @onclick="ReiniciarFiltro">
+                    Todos (@asociaciones.Count)
+                </button>
+
+                @foreach (var proyecto in proyectosUnicos)
+                {
+                    <button class="pill-filtros @GetPillClass(proyecto)"
+                            @onclick="() => filterTipo = proyecto">
+                        @proyecto (@GetCount(proyecto))
+                    </button>
+                }
+
+                <button class="btn btn-primary ms-auto" @onclick="AbrirModalCrear">
+                    <i class="bi bi-plus"></i> Nueva Asociación
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-custom table-hover">
+            <thead class="table-header-custom">
+                <tr>
+                    <th>Meta Estratégica</th>
+                    <th>Objetivo</th>
+                    <th>Proyecto</th>
+                    <th>Tipo Proyecto</th>
+                    <th>Responsable</th>
+                    <th>Fecha Asociación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (asociacionesFiltradas.Any())
+                {
+                    @foreach (var asociacion in asociacionesFiltradas)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle" style="background-color: #0d6efd;">
+                                        <i class="bi bi-bullseye text-white"></i>
+                                    </div>
+                                    <div>
+                                        <strong>@asociacion.TituloMeta</strong>
+                                        <br />
+                                        <small class="text-muted">@asociacion.DescripcionMeta</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">@asociacion.ObjetivoEstrategico</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="avatar-circle" style="background-color: #198754;">
+                                        @ObtenerIniciales(asociacion.TituloProyecto)
+                                    </div>
+                                    <div>
+                                        <strong>@asociacion.TituloProyecto</strong>
+                                        <br />
+                                        <small class="text-muted">[@asociacion.CodigoProyecto]</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>@asociacion.TipoProyecto</td>
+                            <td>@asociacion.ResponsableProyecto</td>
+                            <td>@asociacion.FechaAsociacion.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn-action btn-action-edit"
+                                            title="Editar"
+                                            @onclick="() => AbrirModalEditar(asociacion)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+
+                                    <button class="btn-action btn-action-delete"
+                                            title="Eliminar"
+                                            @onclick="() => ConfirmarEliminar(asociacion)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                            <p class="text-muted mt-3 mb-0">No se encontraron asociaciones entre metas y proyectos</p>
+                            <button class="btn btn-primary mt-3" @onclick="AbrirModalCrear">
+                                <i class="bi bi-plus me-2"></i>Crear Primera Asociación
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Mensaje))
+{
+    <div class="alert @(MensajeExito ? "alert-success" : "alert-danger") alert-dismissible fade show mt-3" role="alert">
+        <i class="bi @(MensajeExito ? "bi-check-circle-fill" : "bi-exclamation-triangle-fill") me-2"></i>
+        @Mensaje
+        <button type="button" class="btn-close" @onclick="() => Mensaje = string.Empty"></button>
+    </div>
+}
+
+<!-- Modal de Búsqueda -->
+<BusquedaModal IsModalVisible="@mostrarModalBusqueda"
+               Titulo="Buscar Asociación Meta-Proyecto"
+               Placeholder="Meta, proyecto, responsable, tipo..."
+               MensajeInfo="Se buscarán coincidencias en metas estratégicas, proyectos, responsables y tipos"
+               TextoBusqueda="@textoBusqueda"
+               TextoBusquedaChanged="@((valor) => { textoBusqueda = valor; })"
+               OnBuscar="@RealizarBusqueda"
+               OnCerrar="@CerrarModalBusqueda" />
+
+<!-- Modal de Meta-Proyecto -->
+<MetaProyectoModal Title="@tituloModal"
+                   metaProyecto="@asociacionActual"
+                   IsModalVisible="@mostrarModal"
+                   MetasEstrategicas="@metas"
+                   Proyectos="@proyectos"
+                   Metodo="@GuardarAsociacion"
+                   EsEdicion="@esEdicion" />
+
+@code {
+    private List<DTOMetaProyecto> asociaciones = new();
+    private List<DTOMetaEstrategica> metas = new();
+    private List<DTOProyecto> proyectos = new();
+    private List<string> proyectosUnicos = new();
+
+    private string filterTipo = "todos";
+    private string textoBusqueda = "";
+    private string Mensaje = string.Empty;
+    private bool MensajeExito = true;
+
+    // Modal CRUD
+    private bool mostrarModal = false;
+    private string tituloModal = "";
+    private DTOMetaProyecto asociacionActual = new();
+    private bool esEdicion = false;
+
+    // Modal búsqueda
+    private bool mostrarModalBusqueda = false;
+
+    // Lista filtrada
+    private List<DTOMetaProyecto> asociacionesFiltradas => FiltrarAsociaciones();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            // Cargar todas las asociaciones
+            asociaciones = await serviciosMetaProyecto.ObtenerMetasProyectosAsync();
+
+            // Cargar metas y proyectos para los dropdowns del modal
+            metas = await serviciosMetaEstrategica.ObtenerMetasEstrategicasAsync();
+            proyectos = await serviciosProyecto.ObtenerProyectosAsync();
+
+            ObtenerProyectosUnicos();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar datos: {ex.Message}");
+            MostrarMensaje($"Error al cargar datos: {ex.Message}", false);
+        }
+    }
+
+    private void ObtenerProyectosUnicos()
+    {
+        proyectosUnicos = asociaciones
+            .Where(a => !string.IsNullOrEmpty(a.TituloProyecto))
+            .Select(a => a.TituloProyecto)
+            .Distinct()
+            .ToList();
+    }
+
+    private List<DTOMetaProyecto> FiltrarAsociaciones()
+    {
+        var resultado = asociaciones.AsEnumerable();
+
+        // Filtrar por proyecto
+        if (filterTipo != "todos")
+        {
+            resultado = resultado.Where(a => a.TituloProyecto == filterTipo);
+        }
+
+        // Filtrar por búsqueda
+        if (!string.IsNullOrWhiteSpace(textoBusqueda))
+        {
+            var busqueda = textoBusqueda.ToLower();
+            resultado = resultado.Where(a =>
+                (a.TituloMeta?.ToLower().Contains(busqueda) ?? false) ||
+                (a.DescripcionMeta?.ToLower().Contains(busqueda) ?? false) ||
+                (a.TituloProyecto?.ToLower().Contains(busqueda) ?? false) ||
+                (a.CodigoProyecto?.ToLower().Contains(busqueda) ?? false) ||
+                (a.ResponsableProyecto?.ToLower().Contains(busqueda) ?? false) ||
+                (a.TipoProyecto?.ToLower().Contains(busqueda) ?? false) ||
+                (a.ObjetivoEstrategico?.ToLower().Contains(busqueda) ?? false)
+            );
+        }
+
+        return resultado.ToList();
+    }
+
+    private string GetPillClass(string tipoId) => filterTipo == tipoId ? "pill-active" : "pill-default";
+    private void ReiniciarFiltro() => filterTipo = "todos";
+    private int GetCount(string proyecto) => asociaciones.Count(a => a.TituloProyecto == proyecto);
+
+    private void AbrirModalBusqueda() => mostrarModalBusqueda = true;
+    private void CerrarModalBusqueda() => mostrarModalBusqueda = false;
+    private void RealizarBusqueda() { CerrarModalBusqueda(); StateHasChanged(); }
+
+    private void AbrirModalCrear()
+    {
+        tituloModal = "Nueva Asociación Meta-Proyecto";
+        asociacionActual = new DTOMetaProyecto
+        {
+            FechaAsociacion = DateTime.Now
+        };
+        esEdicion = false;
+        mostrarModal = true;
+    }
+
+    private void AbrirModalEditar(DTOMetaProyecto asociacion)
+    {
+        tituloModal = "Editar Asociación Meta-Proyecto";
+        asociacionActual = new DTOMetaProyecto
+        {
+            IdMeta = asociacion.IdMeta,
+            IdProyecto = asociacion.IdProyecto,
+            FechaAsociacion = asociacion.FechaAsociacion,
+            TituloMeta = asociacion.TituloMeta,
+            TituloProyecto = asociacion.TituloProyecto
+        };
+        esEdicion = true;
+        mostrarModal = true;
+    }
+
+    private async Task GuardarAsociacion()
+    {
+        try
+        {
+            // Validar que se hayan seleccionado meta y proyecto
+            if (asociacionActual.IdMeta <= 0 || asociacionActual.IdProyecto <= 0)
+            {
+                MostrarMensaje("Debe seleccionar una meta y un proyecto.", false);
+                return;
+            }
+
+            DTOMetaProyecto? resultado;
+
+            if (esEdicion)
+            {
+                // Actualizar asociación existente
+                resultado = await serviciosMetaProyecto.ActualizarMetaProyectoAsync(
+                    asociacionActual.IdMeta,
+                    asociacionActual.IdProyecto,
+                    asociacionActual.FechaAsociacion
+                );
+
+                if (resultado != null)
+                {
+                    MostrarMensaje("Asociación actualizada correctamente.", true);
+                }
+                else
+                {
+                    MostrarMensaje("Error al actualizar la asociación.", false);
+                }
+            }
+            else
+            {
+                // Verificar si ya existe la asociación
+                bool existe = await serviciosMetaProyecto.ExisteAsociacionAsync(
+                    asociacionActual.IdMeta,
+                    asociacionActual.IdProyecto
+                );
+
+                if (existe)
+                {
+                    MostrarMensaje("Ya existe una asociación entre esta meta y este proyecto.", false);
+                    return;
+                }
+
+                // Crear nueva asociación
+                resultado = await serviciosMetaProyecto.CrearMetaProyectoAsync(
+                    asociacionActual.IdMeta,
+                    asociacionActual.IdProyecto
+                );
+
+                if (resultado != null)
+                {
+                    MostrarMensaje("Asociación creada correctamente.", true);
+                }
+                else
+                {
+                    MostrarMensaje("Error al crear la asociación.", false);
+                }
+            }
+
+            if (resultado != null)
+            {
+                await CargarDatos();
+                mostrarModal = false;
+                StateHasChanged();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al guardar asociación: {ex.Message}");
+            MostrarMensaje($"Error: {ex.Message}", false);
+        }
+    }
+
+    private async Task ConfirmarEliminar(DTOMetaProyecto asociacion)
+    {
+        bool confirmar = await JSRuntime.InvokeAsync<bool>(
+            "confirm",
+            $"¿Está seguro de eliminar la asociación entre '{asociacion.TituloMeta}' y '{asociacion.TituloProyecto}'?"
+        );
+
+        if (confirmar)
+        {
+            try
+            {
+                var exito = await serviciosMetaProyecto.EliminarMetaProyectoAsync(
+                    asociacion.IdMeta,
+                    asociacion.IdProyecto
+                );
+
+                if (exito)
+                {
+                    MostrarMensaje("Asociación eliminada correctamente.", true);
+                    await CargarDatos();
+                    StateHasChanged();
+                }
+                else
+                {
+                    MostrarMensaje("Error al eliminar la asociación.", false);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al eliminar asociación: {ex.Message}");
+                MostrarMensaje($"Error: {ex.Message}", false);
+            }
+        }
+    }
+
+    private void MostrarMensaje(string mensaje, bool exito)
+    {
+        Mensaje = mensaje;
+        MensajeExito = exito;
+        StateHasChanged();
+    }
+
+    private string ObtenerIniciales(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) return "??";
+        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 1)
+            return partes[0].Substring(0, Math.Min(2, partes[0].Length)).ToUpper();
+        return string.Concat(partes[0][0], partes[1][0]).ToUpper();
+    }
+}

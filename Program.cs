@@ -20,4 +20,7 @@ builder.Services.AddScoped<ServiciosReponsable>();
 builder.Services.AddScoped<ServiciosProyecto>();
 builder.Services.AddScoped<ServiciosObjetivoEstrategico>();
 builder.Services.AddScoped<ServiciosMetaEstrategica>();
+builder.Services.AddScoped<ServiciosMetaProyecto>();
+builder.Services.AddScoped<ServiciosEjecucionPresupuesto>();
+builder.Services.AddScoped<ServiciosDistribucionPresupuesto>();
 await builder.Build().RunAsync();

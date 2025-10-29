@@ -98,7 +98,7 @@ namespace BlazorApp1.Servicios
             }
             catch (Exception ex)
             {
-                // CAMBIO: Mensaje de error corregido
+
                 if (ex.Message.Contains("Meta") || ex.Message.Contains("asociada"))
                 {
                     throw new Exception("No se puede eliminar la Meta Estratégica porque tiene registros asociados.", ex);

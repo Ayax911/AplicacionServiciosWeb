@@ -11,7 +11,7 @@ namespace BlazorApp1.Servicios
             _serviciosAPI = serviciosAPI;
         }
 
-        // GET - Listar todos los entregables
+
         public async Task<IEnumerable<Entregable>> GetEntregables()
         {
             return await _serviciosAPI.GetAPIAsync<IEnumerable<Entregable>>("api/Entregable");
