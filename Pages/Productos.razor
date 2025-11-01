@@ -1,0 +1,376 @@
+﻿@page "/Productos"
+@using BlazorApp1.Models
+@inject Servicios.ServiciosProductos serviciosProducto
+@inject Servicios.ServiciosTProducto serviciosTProducto
+@inject IJSRuntime JSRuntime
+
+<h3 class="mb-2">Gestión de Productos</h3>
+<p>Administra los Productos de tu organización de manera eficiente</p>
+
+@* ========================== DETALLE DEL PROYECTO ========================== *@
+@if (MostrarDetalle)
+{
+    <div class="card">
+        <div class="detalle-header d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="avatar-circle-large">
+                    <img src="@(string.IsNullOrEmpty(productoSeleccionado?.RutaLogo)
+                                                                               ? "company-3d-render-icon-illustration-png.webp"
+                                                                               : productoSeleccionado.RutaLogo)" />
+            </div>
+            <div>
+                <h5 class="mb-0 text-white fw-bold">@productoSeleccionado.Titulo</h5>
+                <p class="mb-0 text-white opacity-75">@productoSeleccionado.Codigo</p>
+            </div>
+        </div>
+        <button class="btn btn-close-white" @onclick="() => MostrarDetalle = false">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
+        <div class="card-body">
+            <div class="d-flex justify-content-center text-center gap-5 m-5">
+                <div>
+                    <label class="d-block mb-2">Código</label>
+                    <strong>@productoSeleccionado.Codigo</strong>
+                </div>
+                <div>
+                    <label class="d-block mb-2">Tipo de Producto</label>
+                    <strong>@productoSeleccionado.TipoProducto</strong>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="detalle-label mb-3">Descripción del Producto</label>
+                <div class="info-card">
+                    <h6 class="fw-semibold mb-2">
+                        <i class="bi bi-folder-fill"></i> @productoSeleccionado.Titulo
+                    </h6>
+                    <p class="mb-0">@productoSeleccionado.DescripcionTipoProducto</p>
+                </div>
+            </div>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="d-block mb-2 text-muted">Fecha Inicio</label>
+                    <strong>@productoSeleccionado.FechaInicio?.ToString("dd/MM/yyyy")</strong>
+                </div>
+                <div class="col-md-6">
+                    <label class="d-block mb-2 text-muted">Fecha Fin Prevista</label>
+                    <strong>@productoSeleccionado.FechaFinPrevista?.ToString("dd/MM/yyyy")</strong>
+                </div>
+            </div>
+
+        @if (productoSeleccionado.FechaFinalizacion != null)
+            {
+                <div class="mb-4">
+                    <label class="d-block mb-2 text-muted">Fecha Finalización</label>
+                    <strong>@productoSeleccionado.FechaFinalizacion?.ToString("dd/MM/yyyy")</strong>
+                </div>
+            }
+
+            <div class="border-bottom mb-3"></div>
+
+            <div class="d-flex justify-content-center gap-5">
+                <button class="btn btn-primary" style="width: 500px" @onclick="() => EditarProducto(productoSeleccionado)">
+                    <i class="bi bi-pencil"></i> Editar
+                </button>
+                <button class="btn btn-danger" style="width: 200px" @onclick="() => EliminarProyecto(productoSeleccionado)">
+                    <i class="bi bi-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+}
+@* ========================== FORMULARIO ========================== *@
+else if (mostrarFormulario)
+{
+    <div class="modal-overlay" @onclick="() => mostrarFormulario = false">
+        <div class="form-card" @onclick:stopPropagation="true">
+            <div class="form-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1 fw-bold">@(productoEditando.Titulo != null ? "Editar Producto" : "Nuevo Producto")</h4>
+                    <p class="mb-0 text-muted">Complete la información del proyecto</p>
+                </div>
+                <button class="btn-close-icon" @onclick="() => mostrarFormulario = false">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="form-body">
+                <div class="mb-4">
+                    <label class="form-label-custom">Código <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control-custom" placeholder="Ej: PROJ-001" @bind="productoEditando.Codigo" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label-custom">Título <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control-custom" placeholder="Ingrese el título" @bind="productoEditando.Titulo" />
+                </div>
+                <div class="mb-4">
+                    <label class="form-label-custom">Descripción <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control-custom" placeholder="Ingrese el título" @bind="productoEditando.Descripcion" />
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label-custom">Tipo de Producto <span class="text-danger">*</span></label>
+                    <select class="form-control-custom" @bind="productoEditando.TipoProducto">
+                        <option value="0">Seleccione un tipo</option>
+                        @foreach (var tipo in tiposProducto)
+                        {
+                            <option value="@tipo.Nombre">@tipo.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Fecha Inicio</label>
+                        <input type="date" class="form-control-custom" @bind="productoEditando.FechaInicio" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label-custom">Fecha Fin Prevista</label>
+                        <input type="date" class="form-control-custom" @bind="productoEditando.FechaFinPrevista" />
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label-custom">Ruta Logo (URL)</label>
+                    <input type="text" class="form-control-custom" placeholder="https://ejemplo.com/logo.png" @bind="productoEditando.RutaLogo" />
+                </div>
+            </div>
+
+
+            <div class="form-footer d-flex justify-content-end gap-3">
+                <button class="btn btn-primary btn-lg" @onclick="GuardarProducto">
+                    <i class="bi bi-check-lg me-2"></i> Guardar
+                </button>
+                <button class="btn btn-secondary btn-lg" @onclick="() => mostrarFormulario = false">
+                    <i class="bi bi-x-lg me-2"></i> Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+}
+@* ========================== LISTADO ========================== *@
+else
+{
+    <div class="mb-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Buscar proyectos..." @bind="busqueda" @bind:event="oninput" />
+                    <i class="bi bi-search search-icon"></i>
+                </div>
+
+                <div class="d-flex align-items-center mt-2 gap-3">
+                    <button class="pill-filtros @GetPillClass("todos")" @onclick="ReiniciarFiltro">
+                        Todos (@productos.Count)
+                    </button>
+
+                    @foreach (var tipo in tipoProductoUnicos())
+                    {
+                        <button class="pill-filtros @GetPillClass(tipo)" @onclick="() => filterTipo = tipo">
+                            @tipo (@GetCount(tipo))
+                        </button>
+                    }
+
+                    <button class="btn btn-primary ms-auto" @onclick="NuevoProducto">
+                        <i class="bi bi-plus"></i> Agregar Proyecto
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-custom table-hover">
+                <thead class="table-header-custom">
+                    <tr>
+                        <th>Código</th>
+                        <th>Título</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th>Fecha Inicio</th>
+                        <th>Fecha Fin</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var producto in ProductosFiltrados())
+                    {
+                        <tr>
+                            <td><span class="badge bg-primary">@producto.Codigo</span></td>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-circle">@ObtenerIniciales(producto.Titulo)</div>
+                                    @producto.Titulo
+                                </div>
+                            </td>
+                            <td>@producto.TipoProducto</td>
+                            <td>@producto.Descripcion</td>
+                            <td>@producto.FechaInicio?.ToString("dd/MM/yyyy")</td>
+                            <td>@producto.FechaFinPrevista?.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn-action btn-action-view" title="Ver detalles" @onclick="() => DetallesSeleccionado(producto)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-action-edit" title="Editar" @onclick="() => EditarProducto(producto)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn-action btn-action-delete" title="Eliminar" @onclick="() => EliminarProyecto(producto)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Mensaje))
+    {
+        <div class="alert alert-info mt-3" role="alert">@Mensaje</div>
+    }
+}
+@code {
+    private List<DTOProductos> productos = new();
+    private DTOProductos productoEditando = new();
+    private bool mostrarFormulario = false;
+    private string busqueda = string.Empty;
+    private string filterTipo = "todos";
+    private string Mensaje = string.Empty;
+    private IEnumerable<Models.TipoProducto> tiposProducto = new List<Models.TipoProducto>();
+    private List<string> tipoProductoUnicos() => productos.Select(p => p.TipoProducto).Distinct().ToList();
+    private DTOProductos productoSeleccionado = new DTOProductos();
+    private bool MostrarDetalle = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await CargarProductos();
+        }catch (Exception ex)
+        {
+            Mensaje = $"Error al cargar los productos: {ex.Message}";
+        }
+    }
+
+    private async Task CargarProductos()
+    {
+        try
+        {
+            productos = await serviciosProducto.ObtenerProductosAsync();
+            tiposProducto = await serviciosTProducto.GetTipoProductos();
+        } catch (Exception ex)
+        {
+            Mensaje = $"Error al cargar los productos: {ex.Message}";
+        }
+    }
+    private string GetPillClass(string tipoId) => filterTipo == tipoId ? "pill-active" : "pill-default";
+    private void ReiniciarFiltro() => filterTipo = "todos";
+    private int GetCount(string tipo) => productos.Count(p => p.TipoProducto == tipo);
+
+
+    private async Task GuardarProducto()
+    {
+        int id = productoEditando?.Id ?? 0;
+        string tipoProducto = productoEditando?.TipoProducto ?? string.Empty;
+        string codigo = productoEditando?.Codigo ?? string.Empty;
+        string titulo = productoEditando?.Titulo ?? string.Empty;
+        string descripcion = productoEditando?.Descripcion ?? string.Empty;
+        DateTime? fechaInicio = productoEditando?.FechaInicio ?? null;
+        DateTime? fechaFinPrevista = productoEditando?.FechaFinPrevista ?? null;
+        string rutaLogo = productoEditando?.RutaLogo ?? string.Empty;
+
+
+
+        var exito = await serviciosProducto.GuardarProductoAsync(id,codigo,titulo,tipoProducto,descripcion,fechaInicio,fechaFinPrevista,rutaLogo);
+        if (exito)
+        {
+            Mensaje = $"Producto '{productoEditando.Titulo}' guardado correctamente.";
+            await CargarProductos();
+            mostrarFormulario = false;
+        }
+        else
+        {
+            Mensaje = $"Error al guardar el producto '{productoEditando.Titulo}'.";
+        }
+    }
+    private List<Models.DTOProductos> ProductosFiltrados()
+    {
+        var resultado = productos.AsEnumerable();
+
+        if (filterTipo != "todos")
+            resultado = resultado.Where(p => p.TipoProducto == filterTipo);
+
+        if (!string.IsNullOrWhiteSpace(busqueda))
+        {
+            resultado = resultado.Where(p =>
+                p.Titulo.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                p.Codigo.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ||
+                (p.Descripcion?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false)
+            );
+        }
+
+        return resultado.ToList();
+    }
+
+    private void NuevoProducto()
+    {
+        productoEditando = new DTOProductos
+        {
+           FechaInicio = DateTime.Now,
+			FechaFinPrevista = DateTime.Now.AddMonths(3)
+        };
+        mostrarFormulario = true;
+    }
+    private void EditarProducto(DTOProductos producto)
+    {
+        productoEditando = producto;
+        mostrarFormulario = true;
+    }
+
+    private void VerDetalles(DTOProductos producto)
+    {
+        productoEditando = producto;
+        MostrarDetalle = true;
+    }
+
+    private void Cancelar()
+    {
+        mostrarFormulario = false;
+    }
+
+    private string ObtenerIniciales(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+            return "";
+        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 1)
+            return partes[0].Substring(0, 1).ToUpper();
+        return string.Concat(partes[0][0], partes[1][0]).ToUpper();
+    }
+    private async Task EliminarProyecto(DTOProductos producto)
+    {
+        var confirmado = await JSRuntime.InvokeAsync<bool>("confirm", $"¿Está seguro de que desea eliminar el proyecto '{producto.Titulo}'?");
+        if (confirmado)
+        {
+            var exito = await serviciosProducto.EliminarProductoAsync(producto.Id);
+            if (!exito)
+            {
+                await CargarProductos();
+                Mensaje = $"Proyecto '{producto.Titulo}' eliminado correctamente.";
+            }
+        }
+    }
+    private void DetallesSeleccionado(Models.DTOProductos producto)
+    {
+        productoSeleccionado = producto;
+        MostrarDetalle = true;
+    }
+}
+

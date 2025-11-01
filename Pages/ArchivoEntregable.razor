@@ -1,0 +1,298 @@
+@page "/archivoentregable"
+@inject Servicios.ServiciosArchivoEntregable serviciosArchivoEntregable
+@inject Servicios.ServiciosArchivo ArchivoService
+@inject Servicios.ServiciosEntregable EntregableService
+@inject IJSRuntime JSRuntime
+
+<h3 class="mb-2">Gestión de Archivos por Entregable</h3>
+<p>Asocia archivos a entregables específicos</p>
+
+@* ========================== DETALLE ========================== *@
+@if (MostrarDetalle)
+{
+    <div class="card">
+        <div class="detalle-header d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="avatar-circle-large">
+                    @ObtenerIniciales(relacionSeleccionada.NombreArchivo)
+                </div>
+                <div>
+                    <h5 class="mb-0 text-white fw-bold">@relacionSeleccionada.NombreArchivo</h5>
+                    <p class="mb-0 text-white opacity-75">@relacionSeleccionada.TituloEntregable</p>
+                </div>
+            </div>
+            <button class="btn btn-close-white" @onclick="() => MostrarDetalle = false">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <div class="card-body">
+            <div class="d-flex justify-content-center text-center gap-5 m-5">
+                <div>
+                    <label class="d-block mb-2">Archivo</label>
+                    <strong>@relacionSeleccionada.NombreArchivo</strong>
+                </div>
+                <div>
+                    <label class="d-block mb-2">Tipo</label>
+                    <strong>@relacionSeleccionada.TipoArchivo</strong>
+                </div>
+                <div>
+                    <label class="d-block mb-2">Entregable</label>
+                    <strong>@relacionSeleccionada.TituloEntregable</strong>
+                </div>
+                <div>
+                    <label class="d-block mb-2">Código</label>
+                    <strong>@relacionSeleccionada.CodigoEntregable</strong>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="detalle-label mb-3">Fecha del Archivo</label>
+                <div class="info-card">
+                    <p class="mb-0">@relacionSeleccionada.FechaArchivo?.ToString("dd/MM/yyyy HH:mm")</p>
+                </div>
+            </div>
+
+            <div class="border-bottom mb-3"></div>
+
+            <div class="d-flex justify-content-center gap-5">
+                <button class="btn btn-danger" style="width: 300px" @onclick="() => EliminarRelacion(relacionSeleccionada)">
+                    <i class="bi bi-trash"></i> Eliminar Asociación
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@* ========================== FORMULARIO ========================== *@
+else if (MostrarFormulario)
+{
+    <div class="modal-overlay" @onclick="() => MostrarFormulario = false">
+        <div class="form-card" @onclick:stopPropagation="true">
+            <div class="form-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1 fw-bold">Nueva Asociación Archivo-Entregable</h4>
+                    <p class="mb-0 text-muted">Seleccione el archivo y el entregable</p>
+                </div>
+                <button class="btn-close-icon" @onclick="() => MostrarFormulario = false">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="form-body">
+                <div class="mb-4">
+                    <label class="form-label-custom">Archivo <span class="text-danger">*</span></label>
+                    <select class="form-control-custom" @bind="relacionEditando.IdArchivo">
+                        <option value="0">Seleccione un archivo</option>
+                        @foreach (var archivo in archivos)
+                        {
+                            <option value="@archivo.Id">@archivo.Nombre (@archivo.Tipo)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label-custom">Entregable <span class="text-danger">*</span></label>
+                    <select class="form-control-custom" @bind="relacionEditando.IdEntregable">
+                        <option value="0">Seleccione un entregable</option>
+                        @foreach (var entregable in entregables)
+                        {
+                            <option value="@entregable.Id">@entregable.Titulo</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-footer d-flex justify-content-end gap-3">
+                <button class="btn btn-primary btn-lg" @onclick="GuardarRelacion">
+                    <i class="bi bi-check-lg me-2"></i> Guardar
+                </button>
+                <button class="btn btn-secondary btn-lg" @onclick="() => MostrarFormulario = false">
+                    <i class="bi bi-x-lg me-2"></i> Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@* ========================== LISTADO ========================== *@
+else
+{
+    <div class="mb-3">
+        <div class="card">
+            <div class="card-body">
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Buscar relaciones..." @bind="busqueda" @bind:event="oninput" />
+                    <i class="bi bi-search search-icon"></i>
+                </div>
+
+                <div class="d-flex align-items-center mt-2 gap-3">
+                    <button class="btn btn-primary ms-auto" @onclick="NuevaRelacion">
+                        <i class="bi bi-plus"></i> Agregar Asociación
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-custom table-hover">
+                <thead class="table-header-custom">
+                    <tr>
+                        <th>Archivo</th>
+                        <th>Tipo</th>
+                        <th>Entregable</th>
+                        <th>Código</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var rel in RelacionesFiltradas())
+                    {
+                        <tr>
+                            <td>@rel.NombreArchivo</td>
+                            <td>@rel.TipoArchivo</td>
+                            <td>@rel.TituloEntregable</td>
+                            <td>@rel.CodigoEntregable</td>
+                            <td>@rel.FechaArchivo?.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn-action btn-action-view" title="Ver detalles" @onclick="() => VerDetalle(rel)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-action-delete" title="Eliminar" @onclick="() => EliminarRelacion(rel)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Mensaje))
+    {
+        <div class="alert alert-info mt-3" role="alert">@Mensaje</div>
+    }
+}
+
+@code {
+    private List<Models.DTOArchivoEntregable> relaciones = new();
+    private List<Models.DTOArchivo> archivos = new();
+    private List<Models.Entregable> entregables = new();
+    private Models.DTOArchivoEntregable relacionSeleccionada = new();
+    private Models.DTOArchivoEntregable relacionEditando = new();
+    private bool MostrarDetalle = false;
+    private bool MostrarFormulario = false;
+    private string busqueda = string.Empty;
+    private string Mensaje = string.Empty;
+
+    protected override async Task OnInitializedAsync() => await CargarDatos();
+
+    private async Task CargarDatos()
+    {
+        try
+        {
+            relaciones = await serviciosArchivoEntregable.ObtenerArchivoEntregablesAsync();
+            archivos = await ArchivoService.ObtenerArchivosAsync();
+            entregables = (await EntregableService.GetEntregables()).ToList();
+        }
+        catch (Exception ex)
+        {
+            Mensaje = $"Error al cargar los datos: {ex.Message}";
+        }
+    }
+
+    private List<Models.DTOArchivoEntregable> RelacionesFiltradas()
+    {
+        if (string.IsNullOrWhiteSpace(busqueda))
+            return relaciones;
+
+        return relaciones.Where(r =>
+            (r.NombreArchivo?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.TituloEntregable?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (r.CodigoEntregable?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) ?? false)
+        ).ToList();
+    }
+
+    private void VerDetalle(Models.DTOArchivoEntregable rel)
+    {
+        relacionSeleccionada = rel;
+        MostrarDetalle = true;
+    }
+
+    private void NuevaRelacion()
+    {
+        relacionEditando = new Models.DTOArchivoEntregable();
+        MostrarFormulario = true;
+    }
+
+    private async Task GuardarRelacion()
+    {
+        try
+        {
+            int idArchivo = relacionEditando?.IdArchivo ?? 0;
+            int idEntregable = relacionEditando?.IdEntregable ?? 0;
+
+            if (idArchivo == 0 || idEntregable == 0)
+            {
+                Mensaje = "Debe seleccionar un archivo y un entregable.";
+                return;
+            }
+
+            bool resultado = await serviciosArchivoEntregable.GuardarArchivoEntregableAsync(idArchivo, idEntregable);
+            if (resultado)
+            {
+                Mensaje = "Asociación creada correctamente.";
+                MostrarFormulario = false;
+                await CargarDatos();
+            }
+            else
+            {
+                Mensaje = "Error al crear la asociación.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Mensaje = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task EliminarRelacion(Models.DTOArchivoEntregable rel)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", $"¿Está seguro de eliminar la asociación entre '{rel.NombreArchivo}' y '{rel.TituloEntregable}'?"))
+        {
+            try
+            {
+                bool resultado = await serviciosArchivoEntregable.EliminarArchivoEntregableAsync(rel.IdArchivo, rel.IdEntregable);
+                Mensaje = resultado ? "Asociación eliminada correctamente." : "Error al eliminar la asociación.";
+                if (resultado)
+                {
+                    MostrarDetalle = false;
+                    await CargarDatos();
+                }
+            }
+            catch (Exception ex)
+            {
+                Mensaje = $"Error: {ex.Message}";
+            }
+        }
+    }
+
+    private string ObtenerIniciales(string texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto))
+            return "??";
+
+        var partes = texto.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return partes.Length switch
+        {
+            1 => partes[0].Substring(0, Math.Min(2, partes[0].Length)).ToUpper(),
+            _ => string.Concat(partes[0][0], partes[1][0]).ToUpper()
+        };
+    }
+}

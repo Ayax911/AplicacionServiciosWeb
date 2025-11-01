@@ -117,7 +117,7 @@
     [Parameter] public bool IsModalVisible { get; set; }
 
     /// <summary>Lista de presupuestos disponibles</summary>
-    [Parameter] public List<DTOPresupuesto> Presupuestos { get; set; } = new();
+    [Parameter] public List<Models.DTOPresupuestos> Presupuestos { get; set; } = new();
 
     /// <summary>Método que se ejecuta al enviar el formulario</summary>
     [Parameter] public Func<Task>? Metodo { get; set; }

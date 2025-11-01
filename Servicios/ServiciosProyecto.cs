@@ -102,5 +102,19 @@ namespace BlazorApp1.Servicios
                 return false;
             }
         }
+      public async Task<bool> guardarRelacionEstado(int proyectoid, int estadoID, string codigo)
+        {
+            string url = "api/procedimientos/ejecutarsp";
+            var parametros = new Dictionary<string, object>
+            {
+                { "nombreSP", "SpEstadoPGuardar" },
+                { "IdProyecto", proyectoid },
+                { "IdEstado", estadoID },
+                { "Codigo", codigo }
+            };
+            var respuesta = await _serviciosAPI.SpAPIAsync<SPResponse<Dictionary<string, object>>>(url, parametros);
+            return respuesta != null && respuesta.Resultados != null && respuesta.Resultados.Any();
+
+        }
     }
 }

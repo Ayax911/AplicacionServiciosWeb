@@ -1,0 +1,84 @@
+﻿@* PSEUDOCODIGO (plan detallado):
+   1. detectar la causa del error CS1955: se está tratando de "llamar" a un EventCallback<TItem> como si fuera un método.
+      - EventCallback<TItem> no es un delegado invocable directamente; hay que usar InvokeAsync(valor) para dispararlo.
+   2. localizar los botones que hacen @onclick="() => OnX(item)" (OnVer, OnEditar, OnEliminar).
+   3. reemplazar esas expresiones por llamadas a InvokeAsync:
+      - usar @onclick="() => OnVer.InvokeAsync(item)" o @onclick="async () => await OnVer.InvokeAsync(item)"
+      - repetir para OnEditar y OnEliminar.
+   4. mantener el resto del componente intacto.
+   5. verificar que OnNuevo (EventCallback sin genérico) puede usarse directamente como @onclick="OnNuevo".
+*@
+
+@typeparam TItem
+
+<div class="mb-3">
+    <div class="card">
+        <div class="card-body">
+            <div class="search-container">
+                <input type="text" class="search-input" placeholder="Buscar @Titulo..." @bind="Busqueda" @bind:event="oninput" />
+                <i class="bi bi-search search-icon"></i>
+            </div>
+
+            <div class="d-flex align-items-center mt-2 gap-3">
+                <button class="btn btn-primary ms-auto" @onclick="OnNuevo">
+                    <i class="bi bi-plus"></i> Agregar @Titulo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table table-custom table-hover">
+            <thead class="table-header-custom">
+                <tr>
+                    @foreach (var header in Columnas)
+                    {
+                        <th>@header</th>
+                    }
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Items != null)
+                {
+                    @foreach (var item in Items)
+                    {
+                        <tr>
+                            @RowTemplate(item)
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <button class="btn-action btn-action-view" title="Ver detalles" @onclick="() => OnVer.InvokeAsync(item)">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn-action btn-action-edit" title="Editar" @onclick="() => OnEditar.InvokeAsync(item)">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn-action btn-action-delete" title="Eliminar" @onclick="() => OnEliminar.InvokeAsync(item)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+@code {
+    [Parameter] public string Titulo { get; set; } = "Entidad";
+    [Parameter] public List<string> Columnas { get; set; } = new();
+    [Parameter] public IEnumerable<TItem>? Items { get; set; }
+
+    [Parameter] public EventCallback OnNuevo { get; set; }
+    [Parameter] public EventCallback<TItem> OnVer { get; set; }
+    [Parameter] public EventCallback<TItem> OnEditar { get; set; }
+    [Parameter] public EventCallback<TItem> OnEliminar { get; set; }
+
+    [Parameter] public RenderFragment<TItem> RowTemplate { get; set; } = default!;
+    private string Busqueda { get; set; } = string.Empty;
+}

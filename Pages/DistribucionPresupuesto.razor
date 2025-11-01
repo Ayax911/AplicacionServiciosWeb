@@ -3,6 +3,8 @@
 @using BlazorApp1.Models
 @using BlazorApp1.Models.DTO
 @inject Servicios.ServiciosDistribucionPresupuesto serviciosDistribucionPresupuesto
+@inject Servicios.ServiciosPresupuesto serviciosPresupuesto 
+@inject Servicios.ServiciosProyecto serviciosProyecto
 @inject IJSRuntime JSRuntime
 
 <h3 class="">Gestión de Distribución Presupuestaria</h3>
@@ -158,7 +160,7 @@
 
 @code {
     private List<DTODistribucionPresupuesto> distribuciones = new();
-    private List<DTOPresupuesto> presupuestos = new();
+    private List<Models.DTOPresupuestos> presupuestos = new();
     private List<DTOProyecto> proyectos = new();
     private List<string> presupuestosUnicos = new();
 
@@ -189,8 +191,8 @@
         try
         {
             distribuciones = await serviciosDistribucionPresupuesto.ObtenerDistribucionesPresupuestoAsync();
-            // presupuestos = await serviciosPresupuesto.ObtenerPresupuestosAsync();
-            // proyectos = await serviciosProyecto.ObtenerProyectosAsync();
+            presupuestos = await serviciosPresupuesto.ObtenerPresupuestosAsync();
+            proyectos = await serviciosProyecto.ObtenerProyectosAsync();
             //Para proyectos, no lo añado por lo de la autoreferencia
             ObtenerPresupuestosUnicos();
         }

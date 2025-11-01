@@ -1,13 +1,18 @@
 -- =============================================
--- DATOS DE PRUEBA COMPLETOS - ProyectosNew
+-- DATOS DE PRUEBA COMPLETOS - ProyectoNew
 -- =============================================
 
-USE ProyectosNew;
+USE Proyectos;
 GO
+
+PRINT '============================================';
+PRINT 'INICIANDO INSERCIÓN DE DATOS DE PRUEBA';
+PRINT '============================================';
 
 -- =============================================
 -- 1. VARIABLES ESTRATÉGICAS
 -- =============================================
+PRINT 'Insertando Variables Estratégicas...';
 SET IDENTITY_INSERT VariableEstrategica ON;
 INSERT INTO VariableEstrategica (Id, Titulo, Descripcion) VALUES
 (1, 'Crecimiento Sostenible', 'Enfoque en expansión con responsabilidad social y ambiental'),
@@ -16,9 +21,11 @@ INSERT INTO VariableEstrategica (Id, Titulo, Descripcion) VALUES
 (4, 'Desarrollo Humano', 'Fortalecimiento del talento y capacidades del equipo');
 SET IDENTITY_INSERT VariableEstrategica OFF;
 
+
 -- =============================================
 -- 2. OBJETIVOS ESTRATÉGICOS
 -- =============================================
+PRINT 'Insertando Objetivos Estratégicos...';
 SET IDENTITY_INSERT ObjetivoEstrategico ON;
 INSERT INTO ObjetivoEstrategico (Id, IdVariable, Titulo, Descripcion) VALUES
 (1, 1, 'Expandir presencia en mercados regionales', 'Aumentar la cobertura geográfica en América Latina'),
@@ -29,9 +36,11 @@ INSERT INTO ObjetivoEstrategico (Id, IdVariable, Titulo, Descripcion) VALUES
 (6, 4, 'Desarrollar programa de liderazgo', 'Formar 50 líderes en metodologías ágiles');
 SET IDENTITY_INSERT ObjetivoEstrategico OFF;
 
+
 -- =============================================
 -- 3. METAS ESTRATÉGICAS
 -- =============================================
+PRINT 'Insertando Metas Estratégicas...';
 SET IDENTITY_INSERT MetaEstrategica ON;
 INSERT INTO MetaEstrategica (Id, IdObjetivo, Titulo, Descripcion) VALUES
 (1, 1, 'Abrir 5 nuevas oficinas regionales', 'Establecer presencia en Colombia, Perú, Chile, Argentina y México'),
@@ -43,9 +52,11 @@ INSERT INTO MetaEstrategica (Id, IdObjetivo, Titulo, Descripcion) VALUES
 (7, 6, 'Certificar equipo en Scrum', 'Lograr certificación PSM para 40 colaboradores');
 SET IDENTITY_INSERT MetaEstrategica OFF;
 
+
 -- =============================================
 -- 4. USUARIOS
 -- =============================================
+PRINT 'Insertando Usuarios...';
 SET IDENTITY_INSERT Usuario ON;
 INSERT INTO Usuario (Id, Email, Contrasena, RutaAvatar, Activo) VALUES
 (1, 'admin@proyectos.com', 'Admin123!', 'https://i.pravatar.cc/150?img=1', 1),
@@ -56,9 +67,11 @@ INSERT INTO Usuario (Id, Email, Contrasena, RutaAvatar, Activo) VALUES
 (6, 'clopez@proyectos.com', 'Pass123!', 'https://i.pravatar.cc/150?img=6', 1);
 SET IDENTITY_INSERT Usuario OFF;
 
+
 -- =============================================
 -- 5. TIPOS DE RESPONSABLE
 -- =============================================
+PRINT 'Insertando Tipos de Responsable...';
 SET IDENTITY_INSERT TipoResponsable ON;
 INSERT INTO TipoResponsable (Id, Titulo, Descripcion) VALUES
 (1, 'Gerente de Proyecto', 'Responsable principal del proyecto'),
@@ -67,9 +80,11 @@ INSERT INTO TipoResponsable (Id, Titulo, Descripcion) VALUES
 (4, 'Líder Técnico', 'Líder técnico especializado');
 SET IDENTITY_INSERT TipoResponsable OFF;
 
+
 -- =============================================
 -- 6. RESPONSABLES
 -- =============================================
+PRINT 'Insertando Responsables...';
 SET IDENTITY_INSERT Responsable ON;
 INSERT INTO Responsable (Id, IdTipoResponsable, IdUsuario, Nombre) VALUES
 (1, 3, 1, 'Juan García Pérez'),
@@ -78,11 +93,12 @@ INSERT INTO Responsable (Id, IdTipoResponsable, IdUsuario, Nombre) VALUES
 (4, 2, 4, 'Ana Hernández Silva'),
 (5, 4, 5, 'Carlos López Díaz'),
 (6, 1, 6, 'Carmen Torres Ruiz');
-SET IDENTITY_INSERT Responsable OFF;
+
 
 -- =============================================
 -- 7. TIPOS DE PROYECTO
 -- =============================================
+PRINT 'Insertando Tipos de Proyecto...';
 SET IDENTITY_INSERT TipoProyecto ON;
 INSERT INTO TipoProyecto (Id, Nombre, Descripcion) VALUES
 (1, 'Desarrollo de Software', 'Proyectos de desarrollo de aplicaciones y sistemas'),
@@ -93,9 +109,11 @@ INSERT INTO TipoProyecto (Id, Nombre, Descripcion) VALUES
 (6, 'Transformación Digital', 'Proyectos de cambio organizacional');
 SET IDENTITY_INSERT TipoProyecto OFF;
 
+
 -- =============================================
--- 8. PROYECTOS PRINCIPALES
+-- 8. PROYECTOS
 -- =============================================
+PRINT 'Insertando Proyectos...';
 SET IDENTITY_INSERT Proyecto ON;
 INSERT INTO Proyecto (Id, IdProyectoPadre, IdResponsable, IdTipoProyecto, Codigo, Titulo, Descripcion, FechaInicio, FechaFinPrevista, FechaFinalizacion, RutaLogo) VALUES
 -- Proyectos principales (sin padre)
@@ -151,89 +169,79 @@ INSERT INTO Proyecto (Id, IdProyectoPadre, IdResponsable, IdTipoProyecto, Codigo
  '2024-06-01', '2025-05-31', NULL, 'https://cdn-icons-png.flaticon.com/512/4341/4341139.png');
 SET IDENTITY_INSERT Proyecto OFF;
 
+
 -- =============================================
--- 9. META_PROYECTO (Asociaciones)
+-- 9. META_PROYECTO
 -- =============================================
+PRINT 'Insertando Meta_Proyecto...';
 INSERT INTO Meta_Proyecto (IdMeta, IdProyecto, FechaAsociacion) VALUES
--- ERP asociado a metas estratégicas
-(3, 1, '2024-01-15'),  -- Meta: Implementar ERP empresarial
-(3, 6, '2024-02-01'),  -- Submódulo Inventarios
-(3, 7, '2024-03-01'),  -- Submódulo Ventas
-(3, 8, '2024-04-01'),  -- Submódulo Contable
-
--- Infraestructura Cloud
-(4, 2, '2024-03-01'),  -- Meta: Migrar a la nube
-(4, 9, '2024-04-01'),  -- Migración AWS
-
--- IA
-(5, 3, '2024-02-01'),  -- Meta: Desarrollar chatbot inteligente
+(3, 1, '2024-01-15'),  -- ERP
+(3, 6, '2024-02-01'),  -- Inventarios
+(3, 7, '2024-03-01'),  -- Ventas
+(3, 8, '2024-04-01'),  -- Contable
+(4, 2, '2024-03-01'),  -- Cloud
+(4, 9, '2024-04-01'),  -- AWS
+(5, 3, '2024-02-01'),  -- IA
 (5, 11, '2024-03-15'), -- Chatbot
-(5, 12, '2024-06-01'), -- Motor recomendaciones
+(5, 12, '2024-06-01'), -- Recomendaciones
+(2, 4, '2025-01-01'),  -- Marketing
+(3, 5, '2024-06-01'),  -- Transformación
+(4, 5, '2024-06-01');
 
--- Marketing
-(2, 4, '2025-01-01'),  -- Meta: Aumentar ventas en 20%
-
--- Transformación Digital
-(3, 5, '2024-06-01'),  -- Meta: Implementar ERP
-(4, 5, '2024-06-01');  -- Meta: Migrar a la nube
 
 -- =============================================
 -- 10. PRESUPUESTOS
 -- =============================================
+PRINT 'Insertando Presupuestos...';
 SET IDENTITY_INSERT Presupuesto ON;
 INSERT INTO Presupuesto (Id, IdProyecto, MontoSolicitado, Estado, MontoAprobado, PeriodoAnio, FechaSolicitud, FechaAprobacion, Observaciones) VALUES
--- Presupuestos 2024
 (1, 1, 15000000.00, 'Aprobado', 14000000.00, 2024, '2023-12-01', '2023-12-20', 'Aprobado con reducción del 7%'),
 (2, 2, 8000000.00, 'Aprobado', 8000000.00, 2024, '2023-12-05', '2023-12-22', 'Aprobado monto completo'),
 (3, 3, 12000000.00, 'Aprobado', 11000000.00, 2024, '2023-12-10', '2023-12-28', 'Aprobado con ajustes menores'),
 (4, 4, 5000000.00, 'Aprobado', 4500000.00, 2024, '2024-11-15', '2024-12-05', 'Aprobado para campaña 2025'),
 (5, 5, 20000000.00, 'Aprobado', 18000000.00, 2024, '2024-04-01', '2024-05-15', 'Proyecto estratégico aprobado'),
-
--- Presupuestos 2025
 (6, 1, 16000000.00, 'Pendiente', NULL, 2025, '2024-11-20', NULL, 'En revisión por comité'),
 (7, 2, 9000000.00, 'Aprobado', 8500000.00, 2025, '2024-11-25', '2024-12-10', 'Aprobado para continuidad'),
 (8, 3, 13000000.00, 'Rechazado', NULL, 2025, '2024-12-01', '2024-12-15', 'Requiere replanteo de alcance');
 SET IDENTITY_INSERT Presupuesto OFF;
 
+
 -- =============================================
 -- 11. DISTRIBUCIÓN PRESUPUESTO
 -- =============================================
+PRINT 'Insertando Distribución Presupuesto...';
 SET IDENTITY_INSERT DistribucionPresupuesto ON;
 INSERT INTO DistribucionPresupuesto (Id, IdPresupuestoPadre, IdProyectoHijo, MontoAsignado) VALUES
--- Distribución del presupuesto ERP (PROJ-001) entre submódulos
 (1, 1, 6, 4000000.00),  -- Inventarios
 (2, 1, 7, 5000000.00),  -- Ventas y CRM
 (3, 1, 8, 5000000.00),  -- Contable
-
--- Distribución del presupuesto Infraestructura (PROJ-002)
 (4, 2, 9, 5000000.00),  -- Migración AWS
 (5, 2, 10, 3000000.00), -- Ciberseguridad
-
--- Distribución del presupuesto IA (PROJ-003)
 (6, 3, 11, 6000000.00), -- Chatbot
 (7, 3, 12, 5000000.00); -- Motor recomendaciones
 SET IDENTITY_INSERT DistribucionPresupuesto OFF;
 
+
 -- =============================================
 -- 12. EJECUCIÓN PRESUPUESTO
 -- =============================================
+PRINT 'Insertando Ejecución Presupuesto...';
 SET IDENTITY_INSERT EjecucionPresupuesto ON;
 INSERT INTO EjecucionPresupuesto (Id, IdPresupuesto, Anio, MontoPlaneado, MontoEjecutado, Observaciones) VALUES
--- Ejecución 2024
 (1, 1, 2024, 14000000.00, 11200000.00, 'Ejecución al 80% - Proyecto en curso'),
 (2, 2, 2024, 8000000.00, 6400000.00, 'Ejecución al 80% - Migración avanzando'),
 (3, 3, 2024, 11000000.00, 7700000.00, 'Ejecución al 70% - Desarrollo en progreso'),
 (4, 4, 2024, 4500000.00, 450000.00, 'Ejecución al 10% - Campaña iniciando'),
 (5, 5, 2024, 18000000.00, 9000000.00, 'Ejecución al 50% - Avance según cronograma'),
-
--- Ejecución 2025 (proyectada)
 (6, 6, 2025, 16000000.00, 0.00, 'Pendiente de aprobación'),
 (7, 7, 2025, 8500000.00, 0.00, 'Planificado para inicio Q1 2025');
 SET IDENTITY_INSERT EjecucionPresupuesto OFF;
 
+
 -- =============================================
 -- 13. ESTADOS
 -- =============================================
+PRINT 'Insertando Estados...';
 SET IDENTITY_INSERT Estado ON;
 INSERT INTO Estado (Id, Nombre, Descripcion) VALUES
 (1, 'Planificado', 'Proyecto en fase de planificación'),
@@ -244,9 +252,11 @@ INSERT INTO Estado (Id, Nombre, Descripcion) VALUES
 (6, 'Retrasado', 'Proyecto con retraso en cronograma');
 SET IDENTITY_INSERT Estado OFF;
 
+
 -- =============================================
 -- 14. ESTADO_PROYECTO
 -- =============================================
+PRINT 'Insertando Estado_Proyecto...';
 INSERT INTO Estado_Proyecto (IdProyecto, IdEstado) VALUES
 (1, 2),  -- ERP: En Progreso
 (2, 2),  -- Infraestructura: En Progreso
@@ -261,46 +271,142 @@ INSERT INTO Estado_Proyecto (IdProyecto, IdEstado) VALUES
 (11, 2), -- Chatbot: En Progreso
 (12, 2); -- Recomendaciones: En Progreso
 
+
 -- =============================================
--- 15. VERIFICACIÓN DE DATOS
+-- 15. ENTREGABLES (ANTES de Archivo y Actividad)
 -- =============================================
-PRINT '============================================';
-PRINT 'RESUMEN DE DATOS INSERTADOS';
-PRINT '============================================';
+PRINT 'Insertando Entregables...';
+SET IDENTITY_INSERT Entregable ON;
+INSERT INTO Entregable (Id, Codigo, Titulo, Descripcion, FechaInicio, FechaFinPrevista, FechaModificacion, FechaFinalizacion) VALUES
+(1, 'ENT-001-001', 'Base de Datos ERP', 
+ 'Diseño y creación de la base de datos completa del sistema ERP',
+ '2024-01-20', '2024-03-15', '2024-03-10', '2024-03-12'),
+
+(2, 'ENT-001-002', 'Módulo de Autenticación', 
+ 'Sistema de login y gestión de usuarios del ERP',
+ '2024-03-15', '2024-05-30', '2024-05-28', '2024-05-29'),
+
+(3, 'ENT-001-003', 'Dashboard Principal', 
+ 'Dashboard con indicadores y métricas principales',
+ '2024-06-01', '2024-08-31', '2024-10-25', NULL),
+
+(4, 'ENT-001A-001', 'Gestión de Almacenes', 
+ 'Funcionalidad para administrar múltiples almacenes',
+ '2024-02-05', '2024-04-30', '2024-04-28', '2024-04-29'),
+
+(7, 'ENT-001B-001', 'Gestión de Clientes', 
+ 'CRUD completo de clientes y contactos',
+ '2024-03-05', '2024-05-31', '2024-10-25', NULL),
+
+(8, 'ENT-001B-002', 'Proceso de Ventas', 
+ 'Flujo completo desde cotización hasta facturación',
+ '2024-06-01', '2024-09-30', '2024-10-25', NULL),
+
+(9, 'ENT-001B-003', 'CRM Integrado', 
+ 'Seguimiento de oportunidades y pipeline de ventas',
+ '2024-10-01', '2024-12-31', NULL, NULL);
+SET IDENTITY_INSERT Entregable OFF;
+
+
+-- =============================================
+-- 16. ARCHIVOS
+-- =============================================
+PRINT 'Insertando Archivos...';
+SET IDENTITY_INSERT Archivo ON;
+INSERT INTO Archivo (Id, IdUsuario, Ruta, Nombre, Tipo, Fecha) VALUES
+(1, 1, '/documentos/erp/disenio_bd.pdf', 'Diseño Base de Datos ERP.pdf', 'pdf', '2024-02-14'),
+(2, 1, '/documentos/erp/manual_usuario.pdf', 'Manual de Usuario ERP.pdf', 'pdf', '2024-05-20'),
+(3, 2, '/documentos/inventarios/especificaciones.docx', 'Especificaciones Inventarios.docx', 'docx', '2024-04-15'),
+(4, 3, '/documentos/ventas/flujo_ventas.pdf', 'Flujo de Proceso Ventas.pdf', 'pdf', '2024-07-10'),
+(11, 6, '/marketing/estrategia/plan_contenidos_2025.pdf', 'Plan de Contenidos 2025.pdf', 'pdf', '2025-01-10'),
+(12, 6, '/marketing/diseno/logo_campana.ai', 'Logo Campaña.ai', 'ai', '2025-01-15'),
+(13, 4, '/marketing/reportes/metricas_q1.xlsx', 'Métricas Q1 2025.xlsx', 'xlsx', '2025-01-20'),
+(14, 1, '/presupuesto/2024/solicitud_erp.xlsx', 'Solicitud Presupuesto ERP 2024.xlsx', 'xlsx', '2023-12-01'),
+(15, 2, '/presupuesto/2024/justificacion_cloud.pdf', 'Justificación Migración Cloud.pdf', 'pdf', '2023-12-05');
+SET IDENTITY_INSERT Archivo OFF;
+
+-- =============================================
+-- 17. ACTIVIDADES
+-- =============================================
+PRINT 'Insertando Actividades...';
+SET IDENTITY_INSERT Actividad ON;
+INSERT INTO Actividad (Id, IdEntregable, Titulo, Descripcion, FechaInicio, FechaFinPrevista, FechaModificacion, FechaFinalizacion, Prioridad, PorcentajeAvance) VALUES
+(1, 1, 'Diseño del Modelo de Datos', 'Crear diagrama ER completo', '2024-01-20', '2024-02-15', '2024-02-14', '2024-02-14', 1, 100),
+(2, 1, 'Creación de Tablas', 'Implementar todas las tablas en SQL Server', '2024-02-16', '2024-03-01', '2024-03-01', '2024-03-01', 1, 100),
+(3, 1, 'Configuración de Constraints', 'Agregar FKs, PKs y validaciones', '2024-03-02', '2024-03-15', '2024-03-12', '2024-03-12', 1, 100),
+(10, 4, 'CRUD de Almacenes', 'Crear interfaz de gestión', '2024-02-05', '2024-03-05', '2024-03-05', '2024-03-04', 1, 100),
+(11, 4, 'Validaciones de Negocio', 'Reglas de negocio para almacenes', '2024-03-06', '2024-04-05', '2024-04-05', '2024-04-04', 1, 100),
+(12, 4, 'Pruebas Unitarias', 'Testing completo del módulo', '2024-04-06', '2024-04-30', '2024-04-28', '2024-04-29', 2, 100);
+SET IDENTITY_INSERT Actividad OFF;
+
+
+-- =============================================
+-- 18. ARCHIVO_ENTREGABLE
+-- =============================================
+PRINT 'Insertando Archivo_Entregable...';
+INSERT INTO Archivo_Entregable (IdArchivo, IdEntregable) VALUES
+(1, 1),  -- Diseño BD -> Base de Datos ERP
+(2, 1),  -- Manual Usuario -> Base de Datos ERP
+(3, 4),  -- Especificaciones -> Gestión de Almacenes
+(4, 8);  -- Flujo Ventas -> Proceso de Ventas
+
+
+-- =============================================
+-- 19. RESPONSABLE_ENTREGABLE
+-- =============================================
+PRINT 'Insertando Responsable_Entregable...';
+INSERT INTO Responsable_Entregable (IdResponsable, IdEntregable, FechaAsociacion) VALUES
+(2, 1, '2024-01-20'), 
+(2, 2, '2024-03-15'), 
+(2, 3, '2024-06-01'), 
+(3, 7, '2024-03-05'),  
+(3, 8, '2024-06-01'), 
+(3, 9, '2024-10-01'); 
+
+
+
+--============================================
+-- 20. RESUMEN DE DATOS INSERTADOS
+--============================================
 
 SELECT 'Variables Estratégicas' AS Tabla, COUNT(*) AS Total FROM VariableEstrategica
-UNION ALL
+UNION ALL 
 SELECT 'Objetivos Estratégicos', COUNT(*) FROM ObjetivoEstrategico
-UNION ALL
+UNION ALL 
 SELECT 'Metas Estratégicas', COUNT(*) FROM MetaEstrategica
-UNION ALL
+UNION ALL 
 SELECT 'Usuarios', COUNT(*) FROM Usuario
-UNION ALL
+UNION ALL 
 SELECT 'Responsables', COUNT(*) FROM Responsable
-UNION ALL
+UNION ALL 
 SELECT 'Tipos de Proyecto', COUNT(*) FROM TipoProyecto
-UNION ALL
+UNION ALL 
 SELECT 'Proyectos', COUNT(*) FROM Proyecto
-UNION ALL
-SELECT 'Meta_Proyecto (Asociaciones)', COUNT(*) FROM Meta_Proyecto
-UNION ALL
+UNION ALL 
+SELECT 'Meta_Proyecto', COUNT(*) FROM Meta_Proyecto
+UNION ALL 
 SELECT 'Presupuestos', COUNT(*) FROM Presupuesto
-UNION ALL
+UNION ALL 
 SELECT 'Distribución Presupuesto', COUNT(*) FROM DistribucionPresupuesto
-UNION ALL
+UNION ALL 
 SELECT 'Ejecución Presupuesto', COUNT(*) FROM EjecucionPresupuesto
-UNION ALL
+UNION ALL 
 SELECT 'Estados', COUNT(*) FROM Estado
+UNION ALL 
+SELECT 'Estado_Proyecto', COUNT(*) FROM Estado_Proyecto
 UNION ALL
-SELECT 'Estado_Proyecto', COUNT(*) FROM Estado_Proyecto;
-
-PRINT '';
-PRINT '✅ Datos de prueba insertados correctamente';
-PRINT '============================================';
-GO
+SELECT 'Entregables', COUNT(*) FROM Entregable
+UNION ALL
+SELECT 'Archivos', COUNT(*) FROM Archivo
+UNION ALL
+SELECT 'Actividades', COUNT(*) FROM Actividad
+UNION ALL
+SELECT 'Archivo_Entregable', COUNT(*) FROM Archivo_Entregable
+UNION ALL
+SELECT 'Responsable_Entregable', COUNT(*) FROM Responsable_Entregable;
 
 -- =============================================
--- 16. CONSULTAS DE VERIFICACIÓN
+-- 21 CONSULTAS DE VERIFICACIÓN
 -- =============================================
 
 -- Verificar jerarquía de proyectos

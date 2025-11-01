@@ -2,6 +2,7 @@
 @using BlazorApp1.Contenedores
 @using BlazorApp1.Models.DTO
 @inject Servicios.ServiciosEjecucionPresupuesto serviciosEjecucionPresupuesto
+@inject Servicios.ServiciosPresupuesto serviciosPresupuesto
 @inject IJSRuntime JSRuntime
 
 <h3 class="">Gestión de Ejecución Presupuestaria</h3>
@@ -155,7 +156,7 @@
 
 @code {
     private List<DTOEjecucionPresupuesto> ejecuciones = new();
-    private List<DTOPresupuesto> presupuestos = new();
+    private List<Models.DTOPresupuestos> presupuestos = new();
     private List<int> aniosUnicos = new();
 
     private string filterTipo = "todos";
@@ -184,7 +185,7 @@
         try
         {
             ejecuciones = await serviciosEjecucionPresupuesto.ObtenerEjecucionesPresupuestoAsync();
-            //presupuestos = await serviciosPresupuesto.ObtenerPresupuestosAsync();
+            presupuestos = await serviciosPresupuesto.ObtenerPresupuestosAsync();
             //Se debe agregar el servicio de Listar presupuestos
             ObtenerAniosUnicos();
         }

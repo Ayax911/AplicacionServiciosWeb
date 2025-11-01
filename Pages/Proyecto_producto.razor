@@ -1,0 +1,293 @@
+﻿@page "/proyecto_producto"
+@using BlazorApp1.Models
+@inject Servicios.ServiciosProyecto_Productos ServicioProyecto_Productos
+@inject Servicios.ServiciosProyecto ServicioProyectos
+@inject Servicios.ServiciosProductos ServicioProductos
+@inject IJSRuntime JSRuntime
+
+<h3 class="mb-2">Gestión de Productos</h3>
+<p>Administra los proyectos de tu organización de manera eficiente</p>
+
+@* ========================== DETALLE DEL PROYECTO ========================== *@
+@if (MostrarDetalle)
+{
+    <div class="card-body">
+        <div class="d-flex justify-content-center text-center gap-5 m-5">
+            <div>
+                <label class="d-block mb-2">Código del Proyecto</label>
+                <strong>@PPSeleccionado.ProyectoCodigo</strong>
+            </div> <!-- ✅ Cierre correcto -->
+            <div>
+                <label class="d-block mb-2">Titulo del Proyecto</label>
+                <strong>@PPSeleccionado.ProyectoTitulo</strong>
+            </div>
+            <div>
+                <label class="d-block mb-2">Código del Producto</label>
+                <strong>@PPSeleccionado.ProductoCodigo</strong>
+            </div>
+            <div>
+                <label class="d-block mb-2">Titulo del Producto</label>
+                <strong>@PPSeleccionado.ProductoTitulo</strong>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="detalle-label mb-3">fecha asosiación</label>
+            <div class="info-card">
+                <h6 class="fw-semibold mb-2">
+                    <i class="bi bi-folder-fill"></i> @PPSeleccionado.FechaAsociacion.ToString("dd/MM/yyyy")
+                </h6>
+            </div>
+        </div>
+
+        <div class="border-bottom mb-3"></div>
+
+        <div class="d-flex justify-content-center gap-5">
+            <button class="btn btn-primary" style="width: 500px" @onclick="() => EditarProducto(PPSeleccionado)">
+                <i class="bi bi-pencil"></i> Editar
+            </button>
+            <button class="btn btn-danger" style="width: 200px" @onclick="() => EliminarRelacion(PPSeleccionado)">
+                <i class="bi bi-trash"></i> Eliminar
+            </button>
+        </div>
+    </div>
+
+}
+@* ========================== FORMULARIO ========================== *@
+else if (mostrarFormulario)
+{
+    <div class="modal-overlay" @onclick="() => mostrarFormulario = false">
+        <div class="form-card" @onclick:stopPropagation="true">
+            <div class="form-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="mb-1 fw-bold">@(PPEditando.ProyectoCodigo != null ? "Editar Relación" : "Nueva relación")</h4>
+                    <p class="mb-0 text-muted">Complete la información del proyecto</p>
+                </div>
+                <button class="btn-close-icon" @onclick="() => mostrarFormulario = false">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <div class="form-body">
+                <div class="mb-4">
+                    <label class="form-label-custom">Producto <span class="text-danger">*</span></label>
+                    <select class="form-control-custom" @bind="PPEditando.IdProducto">
+                        <option value="0">Seleccione un producto</option>
+                        @foreach (var tipo in productos)
+                        {
+                            <option value="@tipo.Id">@tipo.Titulo</option>
+                        }
+                    </select>
+                </div>
+                <label class="form-label-custom">Proyecto <span class="text-danger">*</span></label>
+                <div class="mb-4">
+                <select class="form-control-custom" @bind="PPEditando.IdProyecto">
+                    <option value="0">Seleccione un proyecto</option>
+                    @foreach (var tipo in proyectos)
+                    {
+                        <option value="@tipo.Id">@tipo.Titulo</option>
+                    }
+                </select>
+                </div>
+
+            <div class="row mb-2">
+                <div class="col-md-6 w-100  ">
+                    <label class="form-label-custom">Fecha de asosiación</label>
+                    <input type="date" class="form-control-custom" @bind="PPEditando.FechaAsociacion" />
+                </div>
+            </div>
+            </div>
+
+
+            <div class="form-footer d-flex justify-content-end gap-3">
+                @if (PPEditando.ProyectoCodigo != null)
+                {
+                    <button class="btn btn-primary btn-lg" @onclick="@EditarProyProducto">
+                        <i class="bi bi-check-lg me-2"></i> Editar
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-primary btn-lg" @onclick="GuardarProducto">
+                        <i class="bi bi-check-lg me-2"></i> Guardar
+                </button>
+                }
+                <button class="btn btn-secondary btn-lg" @onclick="() => mostrarFormulario = false">
+                    <i class="bi bi-x-lg me-2"></i> Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+}
+@* ========================== LISTADO ========================== *@
+else
+{
+    <RelacionMolde TItem="DTOProyecto_Producto"
+                   Titulo="Proyecto-Producto"
+                   Items="PP"
+                   Columnas="@Columnas"
+                   OnNuevo="NuevoProducto"
+                   OnVer="DetallesSeleccionado"
+                   OnEditar="EditarProducto"
+                   OnEliminar="EliminarRelacion">
+        <RowTemplate Context="producto">
+            <td><span class="badge bg-primary">@producto.ProductoCodigo</span></td>
+            <td>@producto.ProductoTitulo</td>
+            <td>@producto.ProyectoCodigo</td>
+            <td>@producto.ProyectoTitulo</td>
+            <td>@producto.FechaAsociacion.ToString("dd/MM/yyyy")</td>
+        </RowTemplate>
+    </RelacionMolde>
+
+    @if (!string.IsNullOrEmpty(Mensaje))
+    {
+        <div class="alert alert-info mt-3" role="alert">@Mensaje</div>
+    }
+}
+@code {
+    private List<DTOProyecto_Producto> PP = new();
+    private List<DTOProductos> productos = new();
+    private DTOProyecto_Producto PPEditando = new();
+    private List<DTOProyecto> proyectos = new();
+    private bool mostrarFormulario = false;
+    private string busqueda = string.Empty;
+    private string Mensaje = string.Empty;
+    private IEnumerable<Models.TipoProducto> tiposProducto = new List<Models.TipoProducto>();
+    private DTOProyecto_Producto PPSeleccionado = new DTOProyecto_Producto();
+    private bool MostrarDetalle = false;
+    public List<string> Columnas = new List<string> { "Codigo Producto", "Titulo Producto", "Codigo Proyecto", "Titulo Proyecto","Fecha Asosiación" };
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await CargarProductos();
+
+
+        }
+        catch (Exception ex)
+        {
+            Mensaje = $"Error al cargar la Relación: {ex.Message}";
+        }
+    }
+
+    private async Task CargarProductos()
+    {
+        try
+        {
+            PP = await ServicioProyecto_Productos.ObtenerProyectos_ProductosAsync();
+            productos = await ServicioProductos.ObtenerProductosAsync();
+            proyectos = await ServicioProyectos.ObtenerProyectosAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Mensaje = $"Error al cargar la Relación: {ex.Message}";
+        }
+    }
+
+
+    private async Task GuardarProducto()
+    {
+        int id = 0;
+        string mensaje = string.Empty;
+        if (PPSeleccionado != null && PPEditando.IdProducto == PPSeleccionado.IdProducto)
+        {
+            (id, mensaje) = await ServicioProyecto_Productos.ActualizarRelacion(
+                PPEditando.IdProyecto,
+                PPEditando.IdProducto,
+                PPEditando.FechaAsociacion
+            );
+        }
+        else
+        {
+            (id, mensaje) = await ServicioProyecto_Productos.GuardarRelacion(PPEditando.IdProyecto, PPEditando.IdProducto, PPEditando.FechaAsociacion);
+        }
+        if (id == 1)
+        {
+            Mensaje = mensaje;
+            await CargarProductos();
+            mostrarFormulario = false;
+        }
+        else
+        {
+            Mensaje = mensaje;
+        }
+    }
+    private async Task EditarProyProducto()
+    {
+        int id = 0;
+        string mensaje = string.Empty;
+            (id, mensaje) = await ServicioProyecto_Productos.ActualizarRelacion(
+                PPEditando.IdProyecto,
+                PPEditando.IdProducto,
+                PPEditando.FechaAsociacion
+            );
+        if (id == 1)
+        {
+            Mensaje = mensaje;
+            await CargarProductos();
+            mostrarFormulario = false;
+        }
+        else
+        {
+            Mensaje = mensaje;
+        }
+    }
+
+
+    private void NuevoProducto()
+    {
+        PPEditando = new DTOProyecto_Producto
+        {
+            FechaAsociacion = DateTime.Now
+        };
+        mostrarFormulario = true;
+    }
+    private void EditarProducto(DTOProyecto_Producto producto)
+    {
+        PPEditando = producto;
+        mostrarFormulario = true;
+        
+    }
+
+    private void VerDetalles(DTOProyecto_Producto producto)
+    {
+        PPEditando = producto;
+        MostrarDetalle = true;
+    }
+
+    private void Cancelar()
+    {
+        mostrarFormulario = false;
+    }
+
+    private string ObtenerIniciales(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+            return "";
+        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 1)
+            return partes[0].Substring(0, 1).ToUpper();
+        return string.Concat(partes[0][0], partes[1][0]).ToUpper();
+    }
+    private async Task EliminarRelacion(DTOProyecto_Producto producto)
+    {
+        var resultado = await ServicioProyecto_Productos.EliminarRelacion(producto.IdProyecto, producto.IdProducto);
+
+        if (resultado.Id != -1)
+        {
+            await CargarProductos();
+            Mensaje = "Relación eliminada correctamente.";
+        }
+        else
+        {
+            Mensaje = resultado.Mensaje;
+        }
+
+    }
+    private void DetallesSeleccionado(Models.DTOProyecto_Producto producto)
+    {
+        PPSeleccionado = producto;
+        MostrarDetalle = true;
+    }
+}

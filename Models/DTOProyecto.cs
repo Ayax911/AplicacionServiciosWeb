@@ -45,18 +45,5 @@
         public int IdUsuario { get; set; }
     }
 
-    // DTO para crear/actualizar proyecto
-    public class CrearProyectoDTO
-    {
-        public int? IdProyectoPadre { get; set; }
-        public int IdResponsable { get; set; }
-        public int IdTipoProyecto { get; set; }
-        public string Codigo { get; set; }
-        public string Titulo { get; set; }
-        public string Descripcion { get; set; }
-        public DateTime? FechaInicio { get; set; }
-        public DateTime? FechaFinPrevista { get; set; }
-        public string RutaLogo { get; set; }
-    }
 }
 
