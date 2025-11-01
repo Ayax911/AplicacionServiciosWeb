@@ -105,8 +105,7 @@ else if (MostrarFormulario)
                 <div class="mb-4">
                     <label class="form-label-custom">Proyecto <span class="text-danger">*</span></label>
                     <select class="form-control-custom"
-                            value="@presupuestoEditando.IdProyecto"
-                            @onchange="OnProyectoChange">
+                            @bind="@presupuestoEditando.IdProyecto">
                         <option value="0">Seleccione un proyecto</option>
                         @foreach (var proyecto in proyectos)
                         {
@@ -370,21 +369,6 @@ else
             }
         }
     }
-
-    private void OnProyectoChange(ChangeEventArgs e)
-    {
-        if (int.TryParse(e.Value?.ToString(), out int idSeleccionado))
-        {
-            presupuestoEditando.IdProyecto = idSeleccionado;
-            Console.WriteLine($"Proyecto seleccionado: {idSeleccionado}");
-        }
-        else
-        {
-            presupuestoEditando.IdProyecto = 0;
-            Console.WriteLine(" Proyecto no válido seleccionado.");
-        }
-    }
-
 
     private string ObtenerIniciales(string texto)
     {

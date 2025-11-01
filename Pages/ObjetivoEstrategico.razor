@@ -1,4 +1,5 @@
 ﻿@inject Servicios.ServiciosObjetivoEstrategico serviciosObjetivoEstrategico
+@inject Servicios.ServiciosVariableEstrategica ServiciosVariableEstrategica
 @page "/objetivosestrategicos"
 @using BlazorApp1.Contenedores
 @using BlazorApp1.Models
@@ -122,12 +123,17 @@
                           objetivoEstrategico="@objetivoActual"
                           IsModalVisible="@mostrarModal"
                           Metodo="@GuardarObjetivo"
-                          VariablesEstrategicas="@variablesParaModal" />
+                          VariablesEstrategicas="@variablesParaModal.ToList()" />
+
+    @if (!string.IsNullOrEmpty(Mensaje))
+    {
+        <div class="alert alert-info mt-3" role="alert">@Mensaje</div>
+    }
 
 @code {
     private List<Models.DTO.DTOObjetivoEstrategico> objetivos = new();
     private List<string> variablesEstrategicas = new();
-    private List<Models.VariableEstrategica> variablesParaModal = new();
+    private IEnumerable<Models.VariableEstrategica> variablesParaModal = new List<Models.VariableEstrategica>();
 
     private string filterTipo = "todos";
     private string textoBusqueda = "";
@@ -136,7 +142,7 @@
     private bool mostrarModal = false;
     private string tituloModal = "";
     private Models.DTO.DTOObjetivoEstrategico objetivoActual = new();
-
+    private string Mensaje = "";
     // Variable del modal de búsqueda
     private bool mostrarModalBusqueda = false;
 
@@ -146,14 +152,20 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarDatos();
+        try
+        {
+            await CargarDatos();
+        }catch(Exception ex)
+        {
+            Mensaje = "Erro" + ex;
+        }
     }
 
     private async Task CargarDatos()
     {
         await GetObjetivosEstrategicos();
         ObtenerTipos();
-        variablesParaModal = await serviciosObjetivoEstrategico.ObtenerVariablesEstrategicasAsync();
+        variablesParaModal = await ServiciosVariableEstrategica.GetVariablesEstrategicas();
     }
 
     private async Task GetObjetivosEstrategicos()
@@ -164,7 +176,7 @@
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al obtener objetivos estratégicos: {ex.Message}");
+            Mensaje = $"Error al obtener objetivos estratégicos: {ex.Message}";
         }
     }
 

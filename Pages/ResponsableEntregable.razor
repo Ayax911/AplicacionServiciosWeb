@@ -267,9 +267,14 @@ else
             int idEntregable = relacionEditando?.IdEntregable ?? 0;
             DateTime? fechaAsociacion = relacionEditando?.FechaAsociacion;
 
-            if (idResponsable == 0 || idEntregable == 0)
+            if (idResponsable == 0 )
             {
-                Mensaje = "Debe seleccionar un responsable y un entregable.";
+                Mensaje = "Debe seleccionar un responsable";
+                return;
+            }
+            else if (idEntregable == 0)
+            {
+                Mensaje = "Debe seleccionar un Entregable";
                 return;
             }
 

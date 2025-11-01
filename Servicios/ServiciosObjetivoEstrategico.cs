@@ -29,24 +29,6 @@ namespace BlazorApp1.Servicios
             return respuesta.Resultados;
         }
 
-
-        public async Task<List<VariableEstrategica>> ObtenerVariablesEstrategicasAsync()
-        {
-            string url = "api/procedimientos/ejecutarsp";
-
-            var parametros = new Dictionary<string, object>
-                {
-                    { "nombreSP", "SPVariableEstrategicaListar" }
-                };
-
-            var respuesta = await _serviciosAPI.SpAPIAsync<SPResponse<VariableEstrategica>>(url, parametros);
-
-            if (respuesta == null || respuesta.Resultados == null)
-                return new List<VariableEstrategica>();
-
-            return respuesta.Resultados;
-        }
-
         public async Task<DTOObjetivoEstrategico?> CrearObjetivoEstrategicoAsync(ObjetivoEstrategico objetivo)
         {
             string url = "api/procedimientos/ejecutarsp";
