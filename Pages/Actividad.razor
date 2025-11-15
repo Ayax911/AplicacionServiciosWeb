@@ -2,6 +2,7 @@
 @inject Servicios.ServiciosEntregable EntregableService
 @inject Servicios.ServiciosActividad serviciosActividad
 @inject IJSRuntime JSRuntime
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <h3 class="mb-2">Gestión de Actividades</h3>
 <p>Administra las actividades asociadas a los entregables</p>

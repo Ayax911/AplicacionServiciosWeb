@@ -1,0 +1,9 @@
+﻿@namespace BlazorApp1.Pages
+@inject NavigationManager NavigationManager
+
+@code {
+    protected override void OnInitialized()
+    {
+        NavigationManager.NavigateTo("/login", replace: true);
+    }
+}

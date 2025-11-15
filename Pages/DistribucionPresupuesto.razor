@@ -6,6 +6,7 @@
 @inject Servicios.ServiciosPresupuesto serviciosPresupuesto 
 @inject Servicios.ServiciosProyecto serviciosProyecto
 @inject IJSRuntime JSRuntime
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <h3 class="">Gestión de Distribución Presupuestaria</h3>
 <p>Distribuye presupuestos entre proyectos hijo para optimizar la asignación de recursos.</p>

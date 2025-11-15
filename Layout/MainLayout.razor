@@ -1,16 +1,44 @@
 ﻿@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.Components.Authorization
+@using BlazorApp1.Servicios
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject ServiciosAutenticacion ServiciosAutenticacion
+@inject NavigationManager Navigation
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
     </div>
 
     <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+        <AuthorizeView>
+            <Authorized>
+                <div class="top-row">
+                    <span class="me-3">👤 @context.User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value</span>
+                    <button class="btn btn-sm btn-outline-danger" @onclick="CerrarSesion">
+                        <i class="bi bi-box-arrow-right"></i> Cerrar Sesión
+                    </button>
+                </div>
+            </Authorized>
+            <!-- 
+            <NotAuthorized>
+                <p>Por favor <a href="/login">inicia sesión</a></p>
+            </NotAuthorized>
+            -->
+        </AuthorizeView>
 
-        <article class="content px-4">
-            @Body
-        </article>
+        @Body
     </main>
 </div>
+
+@code {
+    private async Task CerrarSesion()
+    {
+        ServiciosAutenticacion.CerrarSesion();
+
+        var authStateProvider = (AuthStateProvider)AuthenticationStateProvider;
+        authStateProvider.NotificarLogout();
+
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+}

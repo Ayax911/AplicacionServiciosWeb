@@ -2,6 +2,7 @@
 @inject Servicios.ServiciosPresupuesto serviciosPresupuesto
 @inject Servicios.ServiciosProyecto ProyectoService
 @inject IJSRuntime JSRuntime
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <h3 class="mb-2">Gestión de Presupuestos</h3>
 <p>Administra los presupuestos de los proyectos</p>

@@ -2,6 +2,7 @@
 @inject Servicios.ServiciosArchivo serviciosArchivo
 @inject Servicios.ServiciosUsuario UsuarioService
 @inject IJSRuntime JSRuntime
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <h3 class="mb-2">Gestión de Archivos</h3>
 <p>Administra los archivos del sistema</p>

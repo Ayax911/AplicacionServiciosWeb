@@ -3,6 +3,7 @@
 @using BlazorApp1.Contenedores
 <!-- injeccion del servicio  para el CRUD-->
 @inject BlazorApp1.Servicios.ServiciosUsuario UsuarioService
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <h5 class="mb-4 text-center">Lista de Usuarios</h5>
 

@@ -1,13 +1,21 @@
-using BlazorApp1;
+    using BlazorApp1;
+using BlazorApp1.Servicios;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using BlazorApp1.Servicios;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 string url = "http://localhost:5031";
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(url) });
+
+builder.Services.AddScoped<ServiciosAutenticacion>();
+builder.Services.AddScoped<AuthStateProvider>();
+builder.Services.AddScoped<AuthenticationStateProvider>(provider =>
+    provider.GetRequiredService<AuthStateProvider>());
+builder.Services.AddAuthorizationCore();
+
 builder.Services.AddScoped<ServiciosAPI>();
 builder.Services.AddScoped<ServiciosUsuario>();
 builder.Services.AddScoped<ServiciosTResponsable>();

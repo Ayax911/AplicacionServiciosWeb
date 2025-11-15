@@ -1,0 +1,307 @@
+﻿@page "/login"
+@using BlazorApp1.Models.ENTIDADES
+@using Microsoft.AspNetCore.Components.Authorization
+@inject Servicios.ServiciosAutenticacion serviciosAutenticacion
+@inject Servicios.AuthStateProvider authStateProvider
+@inject NavigationManager navigationManager
+@inject AuthenticationStateProvider authenticationStateProvider
+
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-icon">
+                <i class="bi bi-shield-lock"></i>
+            </div>
+            <h3>Iniciar Sesión</h3>
+            <p class="text-muted">Ingresa tus credenciales para continuar</p>
+        </div>
+
+        <div class="login-body">
+            @if (!string.IsNullOrEmpty(mensajeError))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    @mensajeError
+                    <button type="button" class="btn-close" @onclick="() => mensajeError = string.Empty"></button>
+                </div>
+            }
+
+            <div class="mb-3">
+                <label class="form-label">Usuario</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-person"></i>
+                    </span>
+                    <input type="text"
+                           class="form-control"
+                           placeholder="Ingresa tu usuario o email"
+                           @bind="credenciales.Usuario"
+                           @onkeypress="HandleKeyPress"
+                           disabled="@cargando" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-lock"></i>
+                    </span>
+                    <input type="@(mostrarPassword ? "text" : "password")"
+                           class="form-control"
+                           placeholder="Ingresa tu contraseña"
+                           @bind="credenciales.Contrasena"
+                           @onkeypress="HandleKeyPress"
+                           disabled="@cargando" />
+                    <button class="btn btn-outline-secondary"
+                            type="button"
+                            @onclick="TogglePassword"
+                            disabled="@cargando">
+                        <i class="bi @(mostrarPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-3 form-check">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="recordarme"
+                       @bind="recordarme"
+                       disabled="@cargando" />
+                <label class="form-check-label" for="recordarme">
+                    Recordarme
+                </label>
+            </div>
+
+            <button class="btn btn-primary w-100 btn-login"
+                    @onclick="IniciarSesion"
+                    disabled="@cargando">
+                @if (cargando)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Iniciando sesión...</span>
+                }
+                else
+                {
+                    <i class="bi bi-box-arrow-in-right me-2"></i>
+                    <span>Iniciar Sesión</span>
+                }
+            </button>
+        </div>
+
+        <div class="login-footer">
+            <a href="#" class="text-decoration-none">¿Olvidaste tu contraseña?</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .login-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px;
+    }
+
+    .login-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        width: 100%;
+        max-width: 450px;
+        overflow: hidden;
+    }
+
+    .login-header {
+        text-align: center;
+        padding: 40px 40px 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .login-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        backdrop-filter: blur(10px);
+    }
+
+        .login-icon i {
+            font-size: 2.5rem;
+        }
+
+    .login-header h3 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+
+    .login-header p {
+        margin: 10px 0 0;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.95rem;
+    }
+
+    .login-body {
+        padding: 40px;
+    }
+
+    .login-footer {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+    }
+
+    .input-group-text {
+        background: #f8f9fa;
+        border-right: none;
+    }
+
+    .form-control {
+        border-left: none;
+        padding: 12px 15px;
+    }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+    .input-group:focus-within .input-group-text {
+        border-color: #667eea;
+    }
+
+    .btn-login {
+        padding: 12px;
+        font-weight: 600;
+        font-size: 1rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        transition: transform 0.2s;
+    }
+
+        .btn-login:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+    .alert {
+        border-radius: 10px;
+        border: none;
+    }
+
+    .form-check-input:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+    }
+
+    .login-footer a {
+        color: #667eea;
+        font-weight: 500;
+    }
+
+        .login-footer a:hover {
+            color: #764ba2;
+        }
+</style>
+
+@code {
+    private CredencialesLogin credenciales = new CredencialesLogin();
+    private string mensajeError = string.Empty;
+    private bool cargando = false;
+    private bool mostrarPassword = false;
+    private bool recordarme = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Verificar si ya está autenticado
+        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState?.User?.Identity?.IsAuthenticated == true)
+        {
+            navigationManager.NavigateTo("/", replace: true);
+        }
+    }
+
+    private async Task IniciarSesion()
+    {
+        mensajeError = string.Empty;
+
+        // Validaciones
+        if (string.IsNullOrWhiteSpace(credenciales.Usuario))
+        {
+            mensajeError = "Por favor ingresa tu usuario";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(credenciales.Contrasena))
+        {
+            mensajeError = "Por favor ingresa tu contraseña";
+            return;
+        }
+
+        cargando = true;
+
+        try
+        {
+            var respuesta = await serviciosAutenticacion.LoginAsync(credenciales);
+
+            if (respuesta != null && respuesta.Estado == 200 && !string.IsNullOrEmpty(respuesta.Token))
+            {
+                // Configurar el header de autorización
+                serviciosAutenticacion.ConfigurarHeaderAutorizacion();
+
+                // Notificar al AuthStateProvider del login
+                authStateProvider.NotificarLogin(respuesta.Usuario);
+
+                // Redirigir al home
+                navigationManager.NavigateTo("/", replace: true);
+            }
+            else
+            {
+                mensajeError = respuesta?.Mensaje ?? "Error al iniciar sesión";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error en IniciarSesion: {ex.Message}");
+            mensajeError = "Error de conexión. Por favor intenta de nuevo.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void TogglePassword()
+    {
+        mostrarPassword = !mostrarPassword;
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !cargando)
+        {
+            await IniciarSesion();
+        }
+    }
+}

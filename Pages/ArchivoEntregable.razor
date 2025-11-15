@@ -3,6 +3,7 @@
 @inject Servicios.ServiciosArchivo ArchivoService
 @inject Servicios.ServiciosEntregable EntregableService
 @inject IJSRuntime JSRuntime
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
 
 <h3 class="mb-2">Gestión de Archivos por Entregable</h3>
 <p>Asocia archivos a entregables específicos</p>
