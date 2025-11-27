@@ -1,0 +1,356 @@
+﻿@page "/register"
+@layout LoginLayout
+@using BlazorApp1.Models.ENTIDADES
+@using Microsoft.AspNetCore.Components.Authorization
+@inject Servicios.ServiciosAutenticacion serviciosAutenticacion
+@inject Servicios.AuthStateProvider authStateProvider
+@inject NavigationManager navigationManager
+@inject AuthenticationStateProvider authenticationStateProvider
+
+<div class="login-container">
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-icon">
+                <i class="bi bi-person-plus-fill"></i>
+            </div>
+            <h3>Crear Cuenta</h3>
+            <p class="text-muted">Completa el formulario para registrarte</p>
+        </div>
+
+        <div class="login-body">
+            @* Mensaje de error *@
+            @if (!string.IsNullOrEmpty(mensajeError))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    @mensajeError
+                    <button type="button" class="btn-close" @onclick="() => mensajeError = string.Empty"></button>
+                </div>
+            }
+
+            @* Mensaje de éxito *@
+            @if (!string.IsNullOrEmpty(mensajeExito))
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    @mensajeExito
+                    <button type="button" class="btn-close" @onclick="() => mensajeExito = string.Empty"></button>
+                </div>
+            }
+
+            @* Campo Email *@
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-envelope"></i>
+                    </span>
+                    <input type="email"
+                           class="form-control @(emailTocado && !EmailValido() ? "is-invalid" : emailTocado && EmailValido() ? "is-valid" : "")"
+                           placeholder="tucorreo@ejemplo.com"
+                           @bind="registro.Email"
+                           @bind:event="oninput"
+                           @onfocusout="() => emailTocado = true"
+                           @onkeypress="HandleKeyPress"
+                           disabled="@cargando" />
+                </div>
+                @if (emailTocado && !EmailValido())
+                {
+                    <div class="invalid-feedback d-block">
+                        <small>@ObtenerMensajeErrorEmail()</small>
+                    </div>
+                }
+            </div>
+
+            @* Campo Contraseña *@
+            <div class="mb-3">
+                <label class="form-label">Contraseña</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-lock"></i>
+                    </span>
+                    <input type="@(mostrarPassword ? "text" : "password")"
+                           class="form-control @(passwordTocado && !PasswordValida() ? "is-invalid" : passwordTocado && PasswordValida() ? "is-valid" : "")"
+                           placeholder="Mínimo 6 caracteres"
+                           @bind="registro.Contrasena"
+                           @bind:event="oninput"
+                           @onfocusout="() => passwordTocado = true"
+                           @onkeypress="HandleKeyPress"
+                           disabled="@cargando" />
+                    <button class="btn btn-outline-secondary"
+                            type="button"
+                            @onclick="TogglePassword"
+                            disabled="@cargando">
+                        <i class="bi @(mostrarPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                    </button>
+                </div>
+                @if (passwordTocado && !PasswordValida())
+                {
+                    <div class="invalid-feedback d-block">
+                        <small>La contraseña debe tener al menos 6 caracteres</small>
+                    </div>
+                }
+                @if (passwordTocado && PasswordValida())
+                {
+                    <div class="password-strength">
+                        <small class="text-muted">
+                            Fortaleza:
+                            <span class="@ObtenerClaseFortaleza()">@ObtenerTextoFortaleza()</span>
+                        </small>
+                    </div>
+                }
+            </div>
+
+            @* Campo Confirmar Contraseña *@
+            <div class="mb-3">
+                <label class="form-label">Confirmar Contraseña</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-lock-fill"></i>
+                    </span>
+                    <input type="@(mostrarConfirmarPassword ? "text" : "password")"
+                           class="form-control @(confirmarTocado && !PasswordsCoinciden() ? "is-invalid" : confirmarTocado && PasswordsCoinciden() ? "is-valid" : "")"
+                           placeholder="Repite tu contraseña"
+                           @bind="registro.ConfirmarContrasena"
+                           @bind:event="oninput"
+                           @onfocusout="() => confirmarTocado = true"
+                           @onkeypress="HandleKeyPress"
+                           disabled="@cargando" />
+                    <button class="btn btn-outline-secondary"
+                            type="button"
+                            @onclick="ToggleConfirmarPassword"
+                            disabled="@cargando">
+                        <i class="bi @(mostrarConfirmarPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                    </button>
+                </div>
+                @if (confirmarTocado && !string.IsNullOrEmpty(registro.ConfirmarContrasena) && !PasswordsCoinciden())
+                {
+                    <div class="invalid-feedback d-block">
+                        <small>Las contraseñas no coinciden</small>
+                    </div>
+                }
+            </div>
+
+            @* Checkbox Términos y Condiciones *@
+            <div class="mb-3 form-check">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="aceptaTerminos"
+                       @bind="registro.AceptaTerminos"
+                       disabled="@cargando" />
+                <label class="form-check-label" for="aceptaTerminos">
+                    Acepto los <a href="/terminos" target="_blank">términos y condiciones</a>
+                </label>
+            </div>
+
+            @* Botón Registrarse *@
+            <button class="btn btn-primary w-100 btn-login mb-3"
+                    @onclick="Registrarse"
+                    disabled="@(cargando || !FormularioValido())">
+                @if (cargando)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    <span>Registrando...</span>
+                }
+                else
+                {
+                    <i class="bi bi-person-plus me-2"></i>
+                    <span>Crear Cuenta</span>
+                }
+            </button>
+
+            @* Link para ir al Login *@
+            <div class="text-center">
+                <p class="mb-0">
+                    ¿Ya tienes una cuenta?
+                    <a href="/login" class="text-primary fw-bold">Inicia sesión aquí</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@code {
+    private RegistroRequest registro = new RegistroRequest();
+    private string mensajeError = string.Empty;
+    private string mensajeExito = string.Empty;
+    private bool cargando = false;
+    private bool mostrarPassword = false;
+    private bool mostrarConfirmarPassword = false;
+
+    // Estados de validación para mostrar mensajes
+    private bool emailTocado = false;
+    private bool passwordTocado = false;
+    private bool confirmarTocado = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Verificar si ya está autenticado
+        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState?.User?.Identity?.IsAuthenticated == true)
+        {
+            navigationManager.NavigateTo("/", replace: true);
+        }
+    }
+
+    private async Task Registrarse()
+    {
+        mensajeError = string.Empty;
+        mensajeExito = string.Empty;
+
+        // Validación final antes de enviar
+        if (!FormularioValido())
+        {
+            mensajeError = "Por favor completa todos los campos correctamente";
+            return;
+        }
+
+        cargando = true;
+
+        try
+        {
+            var respuesta = await serviciosAutenticacion.RegisterAsync(registro);
+
+            if (respuesta != null && respuesta.Estado == 200)
+            {
+                // Registro exitoso
+                mensajeExito = respuesta.Mensaje;
+
+                // Esperar 2 segundos y redirigir al login
+                await Task.Delay(2000);
+                navigationManager.NavigateTo("/login", replace: true);
+            }
+            else
+            {
+                // Error en el registro
+                mensajeError = respuesta?.Mensaje ?? "Error al registrar usuario";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error en Registrarse: {ex.Message}");
+            mensajeError = "Error de conexión. Por favor intenta de nuevo.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    // ============================================================
+    // MÉTODOS DE VALIDACIÓN
+    // ============================================================
+
+    private bool EmailValido()
+    {
+        if (string.IsNullOrWhiteSpace(registro.Email))
+            return false;
+
+        // Validación básica de formato email
+        return System.Text.RegularExpressions.Regex.IsMatch(
+            registro.Email,
+            @"^[^@\s]+@[^@\s]+\.[^@\s]+$"
+        );
+    }
+
+    private string ObtenerMensajeErrorEmail()
+    {
+        if (string.IsNullOrWhiteSpace(registro.Email))
+            return "El email es obligatorio";
+
+        if (!EmailValido())
+            return "Formato de email inválido";
+
+        return string.Empty;
+    }
+
+    private bool PasswordValida()
+    {
+        return !string.IsNullOrWhiteSpace(registro.Contrasena) &&
+               registro.Contrasena.Length >= 6;
+    }
+
+    private bool PasswordsCoinciden()
+    {
+        if (string.IsNullOrWhiteSpace(registro.ConfirmarContrasena))
+            return false;
+
+        return registro.Contrasena == registro.ConfirmarContrasena;
+    }
+
+    private bool FormularioValido()
+    {
+        return EmailValido() &&
+               PasswordValida() &&
+               PasswordsCoinciden() &&
+               registro.AceptaTerminos;
+    }
+
+    // ============================================================
+    // INDICADOR DE FORTALEZA DE CONTRASEÑA
+    // ============================================================
+
+    private string ObtenerTextoFortaleza()
+    {
+        if (string.IsNullOrWhiteSpace(registro.Contrasena))
+            return "";
+
+        int puntos = 0;
+
+        // Longitud
+        if (registro.Contrasena.Length >= 8) puntos++;
+        if (registro.Contrasena.Length >= 12) puntos++;
+
+        // Tiene números
+        if (System.Text.RegularExpressions.Regex.IsMatch(registro.Contrasena, @"\d"))
+            puntos++;
+
+        // Tiene mayúsculas
+        if (System.Text.RegularExpressions.Regex.IsMatch(registro.Contrasena, @"[A-Z]"))
+            puntos++;
+
+        // Tiene caracteres especiales
+        if (System.Text.RegularExpressions.Regex.IsMatch(registro.Contrasena, @"[!@#$%^&*(),.?""':{}|<>]"))
+            puntos++;
+
+        if (puntos <= 2) return "Débil";
+        if (puntos <= 4) return "Media";
+        return "Fuerte";
+    }
+
+    private string ObtenerClaseFortaleza()
+    {
+        var fortaleza = ObtenerTextoFortaleza();
+        return fortaleza switch
+        {
+            "Débil" => "text-weak",
+            "Media" => "text-medium",
+            "Fuerte" => "text-strong",
+            _ => ""
+        };
+    }
+
+    // ============================================================
+    // MÉTODOS AUXILIARES
+    // ============================================================
+
+    private void TogglePassword()
+    {
+        mostrarPassword = !mostrarPassword;
+    }
+
+    private void ToggleConfirmarPassword()
+    {
+        mostrarConfirmarPassword = !mostrarConfirmarPassword;
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !cargando && FormularioValido())
+        {
+            await Registrarse();
+        }
+    }
+}

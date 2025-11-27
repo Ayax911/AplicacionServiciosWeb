@@ -75,7 +75,7 @@
                 </label>
             </div>
 
-            <button class="btn btn-primary w-100 btn-login"
+            <button class="btn btn-primary w-100 btn-login mb-3"
                     @onclick="IniciarSesion"
                     disabled="@cargando">
                 @if (cargando)
@@ -89,9 +89,17 @@
                     <span>Iniciar Sesión</span>
                 }
             </button>
+
+            
+            <div class="text-center">
+                <p class="mb-0">
+                    ¿No tienes una cuenta?
+                    <a href="/register" class="text-primary fw-bold">Regístrate aquí</a>
+                </p>
+            </div>
         </div>
 
-        
+
     </div>
 </div>
 

@@ -81,6 +81,153 @@ namespace BlazorApp1.Servicios
             }
         }
 
+        public async Task<RespuestaRegistro> RegisterAsync(RegistroRequest registro)
+        {
+            try
+            {
+                // FASE 1: VALIDACIONES BÁSICAS DEL LADO CLIENTE
+                if (string.IsNullOrWhiteSpace(registro.Email))
+                {
+                    return new RespuestaRegistro
+                    {
+                        Estado = 400,
+                        Mensaje = "El email es obligatorio"
+                    };
+                }
+
+                if (string.IsNullOrWhiteSpace(registro.Contrasena))
+                {
+                    return new RespuestaRegistro
+                    {
+                        Estado = 400,
+                        Mensaje = "La contraseña es obligatoria"
+                    };
+                }
+
+                if (registro.Contrasena != registro.ConfirmarContrasena)
+                {
+                    return new RespuestaRegistro
+                    {
+                        Estado = 400,
+                        Mensaje = "Las contraseñas no coinciden"
+                    };
+                }
+
+                if (!registro.AceptaTerminos)
+                {
+                    return new RespuestaRegistro
+                    {
+                        Estado = 400,
+                        Mensaje = "Debe aceptar los términos y condiciones"
+                    };
+                }
+
+                // FASE 2: PREPARAR DATOS PARA EL API
+                // Convertir RegistroRequest a UsuarioRegistro (sin campo de confirmación)
+                var usuarioParaCrear = new UsuarioRegistro
+                {
+                    Email = registro.Email.Trim().ToLower(), // Normalizar email
+                    Contrasena = registro.Contrasena, // Se encriptará en el API
+                    Activo = true, // Usuario activo por defecto
+                    RutaAvatar = "https://i.pravatar.cc/150?img=1" // Avatar por defecto
+                };
+
+                // FASE 3: ENVIAR PETICIÓN AL API
+                string url = "api/usuario?camposEncriptar=contrasena";  // Endpoint genérico del EntidadesController
+
+                var json = JsonSerializer.Serialize(usuarioParaCrear, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
+
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                Console.WriteLine($"[REGISTRO] Enviando petición a: {url}");
+                Console.WriteLine($"[REGISTRO] Datos: {json}");
+
+                var response = await _httpClient.PostAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"[REGISTRO] Status Code: {response.StatusCode}");
+                Console.WriteLine($"[REGISTRO] Respuesta: {responseContent}");
+
+                // FASE 4: PROCESAR RESPUESTA DEL API
+                if (response.IsSuccessStatusCode)
+                {
+                    // Intentar deserializar la respuesta del API
+                    var respuestaApi = JsonSerializer.Deserialize<Dictionary<string, object>>(
+                        responseContent,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                    );
+
+                    return new RespuestaRegistro
+                    {
+                        Estado = 200,
+                        Mensaje = "Usuario registrado exitosamente. Ahora puedes iniciar sesión.",
+                        Usuario = registro.Email,
+                        FechaRegistro = DateTime.UtcNow
+                    };
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    // 409 Conflict - Usuario ya existe
+                    return new RespuestaRegistro
+                    {
+                        Estado = 409,
+                        Mensaje = "Este email ya está registrado. Intenta iniciar sesión o usa otro email."
+                    };
+                }
+                else
+                {
+                    // Intentar extraer mensaje de error del API
+                    try
+                    {
+                        var errorApi = JsonSerializer.Deserialize<Dictionary<string, object>>(
+                            responseContent,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                        );
+
+                        var mensajeError = errorApi?.ContainsKey("mensaje") == true
+                            ? errorApi["mensaje"].ToString()
+                            : "Error al registrar usuario";
+
+                        return new RespuestaRegistro
+                        {
+                            Estado = (int)response.StatusCode,
+                            Mensaje = mensajeError ?? "Error desconocido"
+                        };
+                    }
+                    catch
+                    {
+                        return new RespuestaRegistro
+                        {
+                            Estado = (int)response.StatusCode,
+                            Mensaje = "Error al registrar usuario"
+                        };
+                    }
+                }
+            }
+            catch (HttpRequestException httpEx)
+            {
+                Console.WriteLine($"Error HTTP en RegisterAsync: {httpEx.Message}");
+                return new RespuestaRegistro
+                {
+                    Estado = 500,
+                    Mensaje = $"Error de conexión: No se pudo conectar con el servidor"
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error general en RegisterAsync: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+                return new RespuestaRegistro
+                {
+                    Estado = 500,
+                    Mensaje = $"Error inesperado: {ex.Message}"
+                };
+            }
+        }
+
         public string? ObtenerToken()
         {
             return SessionData.Token;
