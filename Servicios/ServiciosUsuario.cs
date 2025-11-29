@@ -27,7 +27,7 @@ namespace BlazorApp1.Servicios
         {
             try
             {
-                return await _serviciosAPI.PostAPIAsync<CUUsuario, RespuestaAPI>($"api/Usuario", usuario);
+                return await _serviciosAPI.PostAPIAsync<CUUsuario, RespuestaAPI>($"api/Usuario?camposEncriptar=contrasena", usuario);
             }
             catch (Exception ex)
             {

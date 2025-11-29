@@ -1,14 +1,15 @@
 ﻿@page "/register"
 @layout LoginLayout
-@using BlazorApp1.Models.ENTIDADES
+@using BlazorApp1.Models
 @using Microsoft.AspNetCore.Components.Authorization
 @inject Servicios.ServiciosAutenticacion serviciosAutenticacion
+@inject Servicios.ServiciosUsuario serviciosUsuario
 @inject Servicios.AuthStateProvider authStateProvider
 @inject NavigationManager navigationManager
 @inject AuthenticationStateProvider authenticationStateProvider
 
 <div class="login-container">
-    <div class="login-card">
+    <div class="login-card register-card">
         <div class="login-header">
             <div class="login-icon">
                 <i class="bi bi-person-plus-fill"></i>
@@ -18,7 +19,6 @@
         </div>
 
         <div class="login-body">
-            @* Mensaje de error *@
             @if (!string.IsNullOrEmpty(mensajeError))
             {
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -28,7 +28,6 @@
                 </div>
             }
 
-            @* Mensaje de éxito *@
             @if (!string.IsNullOrEmpty(mensajeExito))
             {
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -38,44 +37,30 @@
                 </div>
             }
 
-            @* Campo Email *@
             <div class="mb-3">
-                <label class="form-label">Email</label>
+                <label class="form-label">Correo Electrónico *</label>
                 <div class="input-group">
                     <span class="input-group-text">
                         <i class="bi bi-envelope"></i>
                     </span>
                     <input type="email"
-                           class="form-control @(emailTocado && !EmailValido() ? "is-invalid" : emailTocado && EmailValido() ? "is-valid" : "")"
-                           placeholder="tucorreo@ejemplo.com"
-                           @bind="registro.Email"
-                           @bind:event="oninput"
-                           @onfocusout="() => emailTocado = true"
-                           @onkeypress="HandleKeyPress"
+                           class="form-control"
+                           placeholder="correo@ejemplo.com"
+                           @bind="nuevoUsuario.Email"
                            disabled="@cargando" />
                 </div>
-                @if (emailTocado && !EmailValido())
-                {
-                    <div class="invalid-feedback d-block">
-                        <small>@ObtenerMensajeErrorEmail()</small>
-                    </div>
-                }
             </div>
 
-            @* Campo Contraseña *@
             <div class="mb-3">
-                <label class="form-label">Contraseña</label>
+                <label class="form-label">Contraseña *</label>
                 <div class="input-group">
                     <span class="input-group-text">
                         <i class="bi bi-lock"></i>
                     </span>
                     <input type="@(mostrarPassword ? "text" : "password")"
-                           class="form-control @(passwordTocado && !PasswordValida() ? "is-invalid" : passwordTocado && PasswordValida() ? "is-valid" : "")"
+                           class="form-control"
                            placeholder="Mínimo 6 caracteres"
-                           @bind="registro.Contrasena"
-                           @bind:event="oninput"
-                           @onfocusout="() => passwordTocado = true"
-                           @onkeypress="HandleKeyPress"
+                           @bind="nuevoUsuario.Contrasena"
                            disabled="@cargando" />
                     <button class="btn btn-outline-secondary"
                             type="button"
@@ -84,59 +69,48 @@
                         <i class="bi @(mostrarPassword ? "bi-eye-slash" : "bi-eye")"></i>
                     </button>
                 </div>
-                @if (passwordTocado && !PasswordValida())
+                @if (!string.IsNullOrEmpty(nuevoUsuario.Contrasena))
                 {
-                    <div class="invalid-feedback d-block">
-                        <small>La contraseña debe tener al menos 6 caracteres</small>
-                    </div>
-                }
-                @if (passwordTocado && PasswordValida())
-                {
-                    <div class="password-strength">
-                        <small class="text-muted">
-                            Fortaleza:
-                            <span class="@ObtenerClaseFortaleza()">@ObtenerTextoFortaleza()</span>
-                        </small>
-                    </div>
+                    <small class="@(ObtenerClaseFortaleza())">
+                        @ObtenerTextoFortaleza()
+                    </small>
                 }
             </div>
 
-            @* Campo Confirmar Contraseña *@
             <div class="mb-3">
-                <label class="form-label">Confirmar Contraseña</label>
+                <label class="form-label">Confirmar Contraseña *</label>
                 <div class="input-group">
                     <span class="input-group-text">
                         <i class="bi bi-lock-fill"></i>
                     </span>
-                    <input type="@(mostrarConfirmarPassword ? "text" : "password")"
-                           class="form-control @(confirmarTocado && !PasswordsCoinciden() ? "is-invalid" : confirmarTocado && PasswordsCoinciden() ? "is-valid" : "")"
+                    <input type="@(mostrarConfirmPassword ? "text" : "password")"
+                           class="form-control"
                            placeholder="Repite tu contraseña"
-                           @bind="registro.ConfirmarContrasena"
-                           @bind:event="oninput"
-                           @onfocusout="() => confirmarTocado = true"
-                           @onkeypress="HandleKeyPress"
+                           @bind="confirmarContrasena"
                            disabled="@cargando" />
                     <button class="btn btn-outline-secondary"
                             type="button"
-                            @onclick="ToggleConfirmarPassword"
+                            @onclick="ToggleConfirmPassword"
                             disabled="@cargando">
-                        <i class="bi @(mostrarConfirmarPassword ? "bi-eye-slash" : "bi-eye")"></i>
+                        <i class="bi @(mostrarConfirmPassword ? "bi-eye-slash" : "bi-eye")"></i>
                     </button>
                 </div>
-                @if (confirmarTocado && !string.IsNullOrEmpty(registro.ConfirmarContrasena) && !PasswordsCoinciden())
-                {
-                    <div class="invalid-feedback d-block">
-                        <small>Las contraseñas no coinciden</small>
-                    </div>
-                }
             </div>
 
+            <div class="mb-3 form-check">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="aceptarTerminos"
+                       @bind="aceptarTerminos"
+                       disabled="@cargando" />
+                <label class="form-check-label" for="aceptarTerminos">
+                    Acepto los <a href="/terminos" target="_blank">términos y condiciones</a>
+                </label>
+            </div>
 
-
-            @* Botón Registrarse *@
             <button class="btn btn-primary w-100 btn-login mb-3"
-                    @onclick="Registrarse"
-                    disabled="@(cargando || !FormularioValido())">
+                    @onclick="RegistrarUsuario"
+                    disabled="@cargando">
                 @if (cargando)
                 {
                     <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -149,12 +123,9 @@
                 }
             </button>
 
-            @* Link para ir al Login *@
             <div class="text-center">
-                <p class="mb-0">
-                    ¿Ya tienes una cuenta?
-                    <a href="/login" class="text-primary fw-bold">Inicia sesión aquí</a>
-                </p>
+                <span class="text-muted">¿Ya tienes una cuenta? </span>
+                <a href="/login" class="fw-bold">Iniciar Sesión</a>
             </div>
         </div>
     </div>
@@ -163,17 +134,14 @@
 
 
 @code {
-    private RegistroRequest registro = new RegistroRequest();
+    private CUUsuario nuevoUsuario = new CUUsuario();
+    private string confirmarContrasena = string.Empty;
     private string mensajeError = string.Empty;
     private string mensajeExito = string.Empty;
     private bool cargando = false;
     private bool mostrarPassword = false;
-    private bool mostrarConfirmarPassword = false;
-
-    // Estados de validación para mostrar mensajes
-    private bool emailTocado = false;
-    private bool passwordTocado = false;
-    private bool confirmarTocado = false;
+    private bool mostrarConfirmPassword = false;
+    private bool aceptarTerminos = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -185,15 +153,14 @@
         }
     }
 
-    private async Task Registrarse()
+    private async Task RegistrarUsuario()
     {
         mensajeError = string.Empty;
         mensajeExito = string.Empty;
 
-        // Validación final antes de enviar
-        if (!FormularioValido())
+        // Validaciones
+        if (!ValidarFormulario())
         {
-            mensajeError = "Por favor completa todos los campos correctamente";
             return;
         }
 
@@ -201,26 +168,30 @@
 
         try
         {
-            var respuesta = await serviciosAutenticacion.RegisterAsync(registro);
+            // Activar el usuario por defecto
+            nuevoUsuario.Activo = true;
+
+            // Llamar al servicio de usuario para crear el registro
+            var respuesta = await serviciosUsuario.PostUsuario(nuevoUsuario);
 
             if (respuesta != null && respuesta.Estado == 200)
             {
-                // Registro exitoso
-                mensajeExito = respuesta.Mensaje;
+                mensajeExito = "¡Cuenta creada exitosamente! Redirigiendo al login...";
 
-                // Esperar 2 segundos y redirigir al login
+                // Esperar un momento para que el usuario vea el mensaje
                 await Task.Delay(2000);
+
+                // Redirigir al login
                 navigationManager.NavigateTo("/login", replace: true);
             }
             else
             {
-                // Error en el registro
-                mensajeError = respuesta?.Mensaje ?? "Error al registrar usuario";
+                mensajeError = respuesta?.Mensaje ?? "Error al crear la cuenta. Por favor intenta de nuevo.";
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error en Registrarse: {ex.Message}");
+            Console.WriteLine($"Error en RegistrarUsuario: {ex.Message}");
             mensajeError = "Error de conexión. Por favor intenta de nuevo.";
         }
         finally
@@ -229,118 +200,118 @@
         }
     }
 
-    // ============================================================
-    // MÉTODOS DE VALIDACIÓN
-    // ============================================================
-
-    private bool EmailValido()
+    private bool ValidarFormulario()
     {
-        if (string.IsNullOrWhiteSpace(registro.Email))
-            return false;
-
-        // Validación básica de formato email
-        return System.Text.RegularExpressions.Regex.IsMatch(
-            registro.Email,
-            @"^[^@\s]+@[^@\s]+\.[^@\s]+$"
-        );
-    }
-
-    private string ObtenerMensajeErrorEmail()
-    {
-        if (string.IsNullOrWhiteSpace(registro.Email))
-            return "El email es obligatorio";
-
-        if (!EmailValido())
-            return "Formato de email inválido";
-
-        return string.Empty;
-    }
-
-    private bool PasswordValida()
-    {
-        return !string.IsNullOrWhiteSpace(registro.Contrasena) &&
-               registro.Contrasena.Length >= 6;
-    }
-
-    private bool PasswordsCoinciden()
-    {
-        if (string.IsNullOrWhiteSpace(registro.ConfirmarContrasena))
-            return false;
-
-        return registro.Contrasena == registro.ConfirmarContrasena;
-    }
-
-    private bool FormularioValido()
-    {
-        return EmailValido() &&
-               PasswordValida() &&
-               PasswordsCoinciden() &&
-               registro.AceptaTerminos;
-    }
-
-    // ============================================================
-    // INDICADOR DE FORTALEZA DE CONTRASEÑA
-    // ============================================================
-
-    private string ObtenerTextoFortaleza()
-    {
-        if (string.IsNullOrWhiteSpace(registro.Contrasena))
-            return "";
-
-        int puntos = 0;
-
-        // Longitud
-        if (registro.Contrasena.Length >= 8) puntos++;
-        if (registro.Contrasena.Length >= 12) puntos++;
-
-        // Tiene números
-        if (System.Text.RegularExpressions.Regex.IsMatch(registro.Contrasena, @"\d"))
-            puntos++;
-
-        // Tiene mayúsculas
-        if (System.Text.RegularExpressions.Regex.IsMatch(registro.Contrasena, @"[A-Z]"))
-            puntos++;
-
-        // Tiene caracteres especiales
-        if (System.Text.RegularExpressions.Regex.IsMatch(registro.Contrasena, @"[!@#$%^&*(),.?""':{}|<>]"))
-            puntos++;
-
-        if (puntos <= 2) return "Débil";
-        if (puntos <= 4) return "Media";
-        return "Fuerte";
-    }
-
-    private string ObtenerClaseFortaleza()
-    {
-        var fortaleza = ObtenerTextoFortaleza();
-        return fortaleza switch
+        if (string.IsNullOrWhiteSpace(nuevoUsuario.Email))
         {
-            "Débil" => "text-weak",
-            "Media" => "text-medium",
-            "Fuerte" => "text-strong",
-            _ => ""
-        };
+            mensajeError = "Por favor ingresa tu correo electrónico";
+            return false;
+        }
+
+        if (!EsEmailValido(nuevoUsuario.Email))
+        {
+            mensajeError = "Por favor ingresa un correo electrónico válido";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(nuevoUsuario.Contrasena))
+        {
+            mensajeError = "Por favor ingresa una contraseña";
+            return false;
+        }
+
+        if (nuevoUsuario.Contrasena.Length < 6)
+        {
+            mensajeError = "La contraseña debe tener al menos 6 caracteres";
+            return false;
+        }
+
+        if (nuevoUsuario.Contrasena != confirmarContrasena)
+        {
+            mensajeError = "Las contraseñas no coinciden";
+            return false;
+        }
+
+        if (!aceptarTerminos)
+        {
+            mensajeError = "Debes aceptar los términos y condiciones";
+            return false;
+        }
+
+        return true;
     }
 
-    // ============================================================
-    // MÉTODOS AUXILIARES
-    // ============================================================
+    private bool EsEmailValido(string email)
+    {
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 
     private void TogglePassword()
     {
         mostrarPassword = !mostrarPassword;
     }
 
-    private void ToggleConfirmarPassword()
+    private void ToggleConfirmPassword()
     {
-        mostrarConfirmarPassword = !mostrarConfirmarPassword;
+        mostrarConfirmPassword = !mostrarConfirmPassword;
     }
 
-    private async Task HandleKeyPress(KeyboardEventArgs e)
+    private string ObtenerClaseFortaleza()
     {
-        if (e.Key == "Enter" && !cargando && FormularioValido())
+        var fortaleza = CalcularFortalezaContrasena();
+        return fortaleza switch
         {
-            await Registrarse();
-        }
+            1 => "text-weak",
+            2 => "text-medium",
+            3 => "text-strong",
+            _ => ""
+        };
+    }
+
+    private string ObtenerTextoFortaleza()
+    {
+        var fortaleza = CalcularFortalezaContrasena();
+        return fortaleza switch
+        {
+            1 => "Contraseña débil",
+            2 => "Contraseña media",
+            3 => "Contraseña fuerte",
+            _ => ""
+        };
+    }
+
+    private int CalcularFortalezaContrasena()
+    {
+        if (string.IsNullOrEmpty(nuevoUsuario.Contrasena))
+            return 0;
+
+        int puntos = 0;
+
+        if (nuevoUsuario.Contrasena.Length >= 8)
+            puntos++;
+
+        if (nuevoUsuario.Contrasena.Any(char.IsUpper))
+            puntos++;
+
+        if (nuevoUsuario.Contrasena.Any(char.IsDigit))
+            puntos++;
+
+        if (nuevoUsuario.Contrasena.Any(c => !char.IsLetterOrDigit(c)))
+            puntos++;
+
+        return puntos switch
+        {
+            0 or 1 => 1,
+            2 or 3 => 2,
+            _ => 3
+        };
     }
 }

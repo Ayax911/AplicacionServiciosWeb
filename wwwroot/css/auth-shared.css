@@ -2,14 +2,21 @@
    ESTILOS COMPARTIDOS PARA LOGIN Y REGISTER
    Archivo: wwwroot/css/auth-shared.css
    
+   PALETA CORPORATIVA:
+   - Principal: #0A3D62 (Azul Petróleo)
+   - Secundario: #4A6FA5 (Azul Grisáceo)
+   - Fondo: #F2F4F7 (Gris Claro)
+   - Texto: #2E2E2E (Gris Oscuro)
+   - Éxito: #2ECC71 | Alerta: #E67E22 | Error: #C0392B
+   
    INSTRUCCIONES DE USO:
    1. Copia este archivo a: wwwroot/css/auth-shared.css
    2. Referencia en index.html o _Host.cshtml:
       <link href="css/auth-shared.css" rel="stylesheet" />
-   
-   NOTA: Los estilos también están incluidos inline en Register.razor
-         Este archivo es opcional pero recomendado para mejor organización
    ============================================================ */
+
+/* Importar fuente corporativa */
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@300;400;500;600;700&display=swap');
 
 /* Contenedor principal de autenticación */
 .login-container {
@@ -17,19 +24,21 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0A3D62 0%, #4A6FA5 50%, #5b50e6 100%);
     padding: 2rem;
+    font-family: 'Work Sans', sans-serif;
 }
 
 /* Tarjeta de autenticación */
 .login-card {
     background: white;
-    border-radius: 1rem;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
     padding: 2.5rem;
     width: 100%;
     max-width: 450px;
     animation: slideIn 0.3s ease-out;
+    overflow: hidden;
 }
 
 @keyframes slideIn {
@@ -46,81 +55,120 @@
 
 /* Header de la tarjeta */
 .login-header {
+    background: linear-gradient(135deg, #0A3D62 0%, #4A6FA5 100%);
+    padding: 2.5rem 2rem;
     text-align: center;
-    margin-bottom: 2rem;
+    color: #FFFFFF;
+    margin: -2.5rem -2.5rem 2rem -2.5rem;
 }
 
     .login-header h3 {
         font-weight: 700;
-        color: #333;
+        color: #FFFFFF;
         margin-bottom: 0.5rem;
+        font-family: 'Work Sans', sans-serif;
     }
 
     .login-header .text-muted {
         font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .login-header p {
+        color: rgba(255, 255, 255, 0.85);
+        margin: 0;
     }
 
 /* Icono principal */
 .login-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 1.5rem;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px rgba(10, 61, 98, 0.3);
 }
 
     .login-icon i {
-        font-size: 2rem;
-        color: white;
+        font-size: 2.5rem;
+        color: #FFFFFF;
     }
 
 /* Body de la tarjeta */
 .login-body {
     margin-top: 1.5rem;
+    padding: 0 0.5rem;
 }
 
 /* Estilos de inputs */
 .form-label {
     font-weight: 600;
-    color: #555;
+    color: #0A3D62;
     margin-bottom: 0.5rem;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.input-group {
+    display: flex;
+    margin-bottom: 1rem;
 }
 
 .input-group-text {
-    background-color: #f8f9fa;
+    background: #F2F4F7;
+    border: 2px solid #E0E4E8;
     border-right: none;
+    color: #4A6FA5;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    border-radius: 8px 0 0 8px;
 }
 
 .form-control {
+    border: 2px solid #E0E4E8;
     border-left: none;
-    padding-left: 0;
+    border-radius: 0 8px 8px 0;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    color: #2E2E2E;
+    background: #FFFFFF;
+    transition: all 0.3s ease;
+    font-family: 'Work Sans', sans-serif;
 }
 
     .form-control:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        border-color: #4A6FA5;
+        box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.1);
+        outline: none;
     }
 
 .input-group:focus-within .input-group-text {
-    border-color: #667eea;
+    border-color: #4A6FA5;
+}
+
+.input-group:focus-within .form-control {
+    border-color: #4A6FA5;
 }
 
 /* Botón principal */
 .btn-login {
-    padding: 0.75rem;
+    padding: 0.875rem;
     font-weight: 600;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-size: 1rem;
+    background: linear-gradient(135deg, #0A3D62 0%, #4A6FA5 100%);
     border: none;
     transition: all 0.3s ease;
+    border-radius: 8px;
+    font-family: 'Work Sans', sans-serif;
 }
 
     .btn-login:hover:not(:disabled) {
         transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 8px 20px rgba(10, 61, 98, 0.3);
+        background: linear-gradient(135deg, #0A3D62 0%, #1a4d7a 100%);
     }
 
     .btn-login:disabled {
@@ -130,8 +178,8 @@
 
 /* Validaciones visuales */
 .form-control.is-invalid {
-    border-color: #dc3545;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+    border-color: #C0392B;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23C0392B'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23C0392B' stroke='none'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-position: right calc(0.375em + 0.1875rem) center;
     background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
@@ -139,8 +187,8 @@
 }
 
 .form-control.is-valid {
-    border-color: #28a745;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%2328a745' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    border-color: #2ECC71;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%232ECC71' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
     background-repeat: no-repeat;
     background-position: right calc(0.375em + 0.1875rem) center;
     background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
@@ -151,42 +199,84 @@
     display: block !important;
     margin-top: 0.25rem;
     font-size: 0.875rem;
+    color: #C0392B;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.valid-feedback {
+    display: block !important;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #2ECC71;
+    font-family: 'Work Sans', sans-serif;
 }
 
 /* Indicador de fortaleza de contraseña */
 .password-strength {
     margin-top: 0.25rem;
+    font-size: 0.875rem;
+    font-family: 'Work Sans', sans-serif;
 }
 
     .password-strength .text-weak {
-        color: #dc3545 !important;
+        color: #C0392B !important;
         font-weight: 600;
     }
 
     .password-strength .text-medium {
-        color: #ffc107 !important;
+        color: #E67E22 !important;
         font-weight: 600;
     }
 
     .password-strength .text-strong {
-        color: #28a745 !important;
+        color: #2ECC71 !important;
         font-weight: 600;
     }
 
 /* Enlaces */
 a {
+    color: #0A3D62;
     text-decoration: none;
     transition: all 0.2s ease;
+    font-family: 'Work Sans', sans-serif;
 }
 
     a:hover {
+        color: #4A6FA5;
         text-decoration: underline;
     }
 
 /* Alertas */
 .alert {
-    border-radius: 0.5rem;
+    border-radius: 8px;
     animation: fadeIn 0.3s ease-out;
+    font-family: 'Work Sans', sans-serif;
+    border: none;
+    padding: 1rem 1.5rem;
+}
+
+.alert-success {
+    background: #D4EDDA;
+    border-left: 4px solid #2ECC71;
+    color: #155724;
+}
+
+.alert-danger {
+    background: #F8D7DA;
+    border-left: 4px solid #C0392B;
+    color: #721C24;
+}
+
+.alert-info {
+    background: #E8F4F8;
+    border-left: 4px solid #4A6FA5;
+    color: #0A3D62;
+}
+
+.alert-warning {
+    background: #FFF3CD;
+    border-left: 4px solid #E67E22;
+    color: #856404;
 }
 
 @keyframes fadeIn {
@@ -215,27 +305,68 @@ a {
     }
 
         .login-icon i {
-            font-size: 1.5rem;
+            font-size: 2rem;
         }
+
+    .login-header {
+        padding: 2rem 1.5rem;
+        margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    }
 }
 
 /* Mejoras adicionales para formularios */
-.form-check-input:checked {
-    background-color: #667eea;
-    border-color: #667eea;
+.form-check-input {
+    border: 2px solid #E0E4E8;
+    cursor: pointer;
 }
 
-.form-check-input:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+    .form-check-input:checked {
+        background-color: #0A3D62;
+        border-color: #0A3D62;
+    }
+
+    .form-check-input:focus {
+        border-color: #4A6FA5;
+        box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.1);
+    }
+
+.form-check-label {
+    color: #2E2E2E;
+    cursor: pointer;
+    font-family: 'Work Sans', sans-serif;
 }
 
 /* Estilos para botones de mostrar/ocultar contraseña */
-.btn-outline-secondary:hover {
-    background-color: #f8f9fa;
-    border-color: #6c757d;
-    color: #495057;
+.btn-outline-secondary {
+    border: 2px solid #E0E4E8;
+    color: #4A6FA5;
+    background: #F2F4F7;
+    font-family: 'Work Sans', sans-serif;
 }
+
+    .btn-outline-secondary:hover {
+        background-color: #E0E4E8;
+        border-color: #4A6FA5;
+        color: #0A3D62;
+    }
+
+/* Botón secundario */
+.btn-secondary {
+    background: #FFFFFF;
+    border: 2px solid #4A6FA5;
+    color: #4A6FA5;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    padding: 0.625rem 1.25rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+    .btn-secondary:hover {
+        background: #F2F4F7;
+        border-color: #0A3D62;
+        color: #0A3D62;
+    }
 
 /* Animación para el spinner */
 @keyframes spin {
@@ -246,4 +377,104 @@ a {
 
 .spinner-border {
     animation: spin 0.75s linear infinite;
+    border-color: #4A6FA5;
+    border-right-color: transparent;
+}
+
+/* Texto adicional */
+.text-muted {
+    color: #7A7A7A;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-primary {
+    color: #0A3D62 !important;
+}
+
+.text-success {
+    color: #2ECC71 !important;
+}
+
+.text-danger {
+    color: #C0392B !important;
+}
+
+/* Divider de registro */
+.register-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.5rem 0;
+    color: #7A7A7A;
+    font-size: 0.9rem;
+}
+
+    .register-divider::before,
+    .register-divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #E0E4E8;
+    }
+
+    .register-divider::before {
+        margin-right: 1rem;
+    }
+
+    .register-divider::after {
+        margin-left: 1rem;
+    }
+
+/* Mejoras de accesibilidad */
+.form-control:focus,
+.btn:focus,
+.form-check-input:focus {
+    outline: none;
+}
+
+/* Mensajes de estado */
+.status-message {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    font-family: 'Work Sans', sans-serif;
+}
+
+.status-success {
+    background: #D4EDDA;
+    color: #155724;
+    border-left: 4px solid #2ECC71;
+}
+
+.status-error {
+    background: #F8D7DA;
+    color: #721C24;
+    border-left: 4px solid #C0392B;
+}
+
+/* Loading state */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 61, 98, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 0.3rem solid rgba(255, 255, 255, 0.3);
+    border-top-color: #FFFFFF;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
 }
